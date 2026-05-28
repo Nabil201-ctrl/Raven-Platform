@@ -1,0 +1,10 @@
+<script>
+  console.log("Token in localStorage:", localStorage.getItem('token'));
+  console.log("User in localStorage:", localStorage.getItem('user'));
+  
+  // Try to manually redirect
+  if (localStorage.getItem('token')) {
+    console.log("Has token, redirecting to dashboard...");
+    window.location.href = '/dashboard';
+  }
+</script>
