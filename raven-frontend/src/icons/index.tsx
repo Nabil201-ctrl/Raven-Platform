@@ -4,6 +4,7 @@ interface IconProps {
   size?: number;
   className?: string;
   strokeWidth?: number;
+  style?: React.CSSProperties;
 }
 
 export const HomeIcon: React.FC<IconProps> = ({ size = 22, className = '', strokeWidth = 1.6 }) => (
