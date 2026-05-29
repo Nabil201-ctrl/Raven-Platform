@@ -32,11 +32,11 @@ const QrPlaceholder: React.FC = () => (
 
 /* ── Component ───────────────────────────────────────── */
 export const BookingConfirmation: React.FC = () => {
-  const { bookingId } = useParams<{ bookingId: string }>();
+  useParams<{ bookingId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [booking, setBooking] = useState<Booking | null>(location.state?.booking ?? null);
+  const [booking] = useState<Booking | null>(location.state?.booking ?? null);
   const [driver, setDriver] = useState<Driver | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
 

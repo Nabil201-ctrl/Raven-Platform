@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import type { Driver } from '../types';
-import { ArrowLeftIcon, KekeIcon, StarIcon, MapPinIcon } from '../icons';
+import { ArrowLeftIcon, KekeIcon, StarIcon } from '../icons';
 
 const PRICE_OPTIONS = [120, 220, 320, 420] as const;
 

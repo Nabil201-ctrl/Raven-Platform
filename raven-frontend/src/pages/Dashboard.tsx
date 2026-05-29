@@ -237,7 +237,7 @@ export const Dashboard: React.FC = () => {
         {/* Driver verification (State A) */}
         {verifiedDriver && (
           <div className="mt-3 rounded-2xl p-4 animate-fade-up"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--accent-blue)', borderOpacity: 0.4 }}>
+            style={{ background: 'var(--card-bg)', border: '1px solid rgba(42, 111, 245, 0.4)' }}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold flex-shrink-0"
                 style={{ background: 'var(--inset-bg)', color: 'var(--text-primary)' }}>

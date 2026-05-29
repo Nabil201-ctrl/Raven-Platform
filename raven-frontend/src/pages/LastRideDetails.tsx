@@ -5,7 +5,7 @@ import type { RideHistoryEntry } from '../types';
 import { useCalls } from '../hooks/useCalls';
 import {
   ArrowLeftIcon, PhoneIcon, HeartIcon, FlagIcon, ThumbsUpIcon,
-  StarIcon, MapPinIcon, KekeIcon, ShuttleIcon,
+  StarIcon, KekeIcon, ShuttleIcon,
 } from '../icons';
 
 export const LastRideDetails: React.FC = () => {

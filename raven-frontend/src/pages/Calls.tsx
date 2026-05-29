@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useCalls } from '../hooks/useCalls';
 import { useWallet } from '../hooks/useWallet';
-import { PhoneIcon, ClockIcon, ShoppingBagIcon, SignalIcon } from '../icons';
+import { PhoneIcon, ClockIcon, SignalIcon } from '../icons';
 
 const PACKAGES = [
   { id: 'p1', minutes: 10, price: 150, talkTime: 3,  label: 'Starter' },
