@@ -1,69 +1,186 @@
-# Monnify Transit & Payment Integration
+# 🐦 Raven Backend — High-Fidelity Real-Time Transit Engine
 
-We have successfully integrated the complete, high-fidelity **Monnify Digital Wallet & Unified Transit Search** system into your full-stack NestJS/React Raven architecture.
+Raven is a highly modularized, production-grade, event-driven transit booking backend. Built on **NestJS** and **TypeScript**, it manages seat allocations, synchronized telemetry, secure sandbox digital wallets via **Monnify**, and private voice call bridging via **Africa's Talking**.
 
 ---
 
-## 🏗️ Full-Stack System Architecture
+## 🗺️ System Component Architecture
+
+The following flowchart illustrates how the client, HTTP REST APIs, the WebSocket Gateway, the persistent datastore, and third-party telecom/fintech sandboxes integrate:
 
 ```mermaid
 graph TD
-  A[Unified Transit Search Bar] -->|Code 1001| B[Toyota HiAce Shuttle Seat Grid]
-  A -->|Code 2002| C[TVS King Keke Price Toggles]
-  B -->|Book Final Seat| D[Dynamic Inbound Reverse Trip Alert]
-  C & B -->|Wallet Pay| E[Monnify Virtual Wallet API]
-  E -->|Successful Purchase| F[Last Ride History Logger]
-  F -->|Dial Contact| G[Secure Masked Call Circular Radar Overlay]
+    %% Styling
+    classDef client fill:#2563eb,stroke:#3b82f6,stroke-width:2px,color:#ffffff;
+    classDef server fill:#0f172a,stroke:#334155,stroke-width:2px,color:#ffffff;
+    classDef external fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#ffffff;
+    classDef db fill:#16a34a,stroke:#22c55e,stroke-width:2px,color:#ffffff;
+
+    %% Nodes
+    C[React Client Page]:::client
+    S[Socket.io Gateway /booking]:::client
+    
+    API[NestJS HTTP Controllers]:::server
+    SEC[Guards & Throttler]:::server
+    SVC[Domain Services Layer]:::server
+    
+    JSONDB[(Persistent db.json)]:::db
+    
+    MON[Monnify Sandbox API]:::external
+    AT[Africa's Talking SDK]:::external
+
+    %% Relations
+    C -->|REST Requests| SEC
+    SEC --> API
+    API --> SVC
+    
+    C <-->|Bi-directional WS Events| S
+    S -->|Active Locks / TTLs| SVC
+    
+    SVC -->|Atomic Reads / Writes| JSONDB
+    SVC <-->|Disbursement / Reserve Accounts| MON
+    SVC <-->|Voice Masking Webhooks| AT
 ```
 
-### 1. Unified Search Codes & Booking Flows
+---
 
-*   **Toyota HiAce Shuttle (Code `1001`):**
-    *   **Driver:** Mustapha Yusuf (Plate: `ABJ-123-XY`).
-    *   **Layout:** Premium 14-seat cabin grid selection card.
-    *   **Rate:** ₦500 per seat.
-    *   **Auto Alert:** If the final seat on the Toyota HiAce is reserved, an automated reverse trip inbound scheduling trigger posts an warning banner at the top of the student's dashboard: *"Shuttle 1001 is fully booked and is now INBOUND. ETA: 8 mins."*
-*   **TVS King Keke (Code `2002`):**
-    *   **Driver:** Ibrahim Bello (Plate: `KDS-789-QA`).
-    *   **Layout:** Instantly bypasses the seat map cabin grid, presenting fare selection chips (₦200, ₦300, ₦500) and custom pricing options.
+## 🔒 1. Real-Time Seat-Lock engine (WebSocket Flow)
+
+To prevent double-bookings, the system utilizes a high-fidelity concurrent seat-locking flow with automatic 2-minute expiration timers:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor ClientA as Passenger A
+    actor ClientB as Passenger B
+    participant GW as Socket Gateway (/booking)
+    participant DB as Persistent Datastore
+    
+    ClientA->>GW: seat:lock (Shuttle 1001, Seat 5)
+    Note over GW: Validates lock map in memory
+    GW-->>ClientA: seat:locked (Lock Confirmed)
+    GW-->>ClientB: seat:locked (Seat 5 disabled in UI)
+    
+    rect rgba(245, 158, 11, 0.1)
+        Note over GW: 2-Minute Expiration Timer Running
+        ClientB->>GW: seat:lock (Seat 5)
+        GW-->>ClientB: seat:lock:denied (Seat Locked)
+    end
+    
+    alt Passenger A completes booking before 2m
+        ClientA->>GW: HTTP POST /api/bookings (Finalize Checkout)
+        GW->>DB: Atomic write (Seat 5 booked)
+        GW-->>GW: Clear temporary lock on Seat 5
+        GW-->>ClientA: shuttle:details:updated (Seat Booked)
+        GW-->>ClientB: shuttle:details:updated (Seat 5 Permanently Booked)
+    else 2 Minutes Pass (Timeout)
+        GW-->>GW: cleanupExpiredLocks() runs
+        GW-->>ClientA: seat:unlocked (Seat 5 Released)
+        GW-->>ClientB: seat:unlocked (Seat 5 Clickable Again)
+    end
+```
 
 ---
 
-## 💳 Monnify Digital Wallet & Sandboxing API (`http://localhost:5000/api`)
+## 🚐 2. Automated Reverse-Trip & Pre-Booking Flow
 
-| Route | Method | Description |
-| :--- | :--- | :--- |
-| `/api/wallet/create` | `POST` | Registers a reserved Monnify sandbox account (Wema Bank). |
-| `/api/wallet/:userId` | `GET` | Retrieves balance, accounts, and queries real-time transactions from Monnify's servers. |
-| `/api/wallet/mock-deposit` | `POST` | Simulates custom bank-transfer deposits for developer testing. |
-| `/api/wallet/withdraw` | `POST` | Invokes the single-disbursement sandboxed payouts. |
-| `/api/monnify/webhook` | `POST` | Live webhook notification receiver that automatically credits balances. |
-| `/api/transit/reverse-trips`| `GET` | Pulls the active reverse-bound shuttle alerts to show in the UI. |
-| `/api/transit/reset-seats` | `POST` | Restores the Toyota HiAce to exactly 1 vacant seat to trigger inbound alerts on the next reservation. |
+When a shuttle gets fully booked en route, the engine dynamically triggers a reverse leg inbound trip:
+
+```mermaid
+graph TD
+    %% Styling
+    classDef step fill:#1e293b,stroke:#475569,stroke-width:1.5px,color:#ffffff;
+    classDef decision fill:#7c2d12,stroke:#ea580c,stroke-width:1.5px,color:#ffffff;
+    classDef action fill:#065f46,stroke:#059669,stroke-width:1.5px,color:#ffffff;
+
+    A[User purchases last available seat]:::step --> B{Shuttle availableSeats == 0?}:::decision
+    B -->|Yes| C[Transition shuttle status to FULL]:::action
+    B -->|No| Z[Finalize booking standard flow]:::step
+    
+    C --> D[Generate Inbound Reverse-Trip Entity]:::action
+    D -->|Add ETA time limit + opposite route| E[(Insert in db.reverseTrips)]:::step
+    
+    E --> F[Broadcast live transit:reverse-trip:added event]:::action
+    F --> G[All Passenger Dashboards slide in Alert Card]:::step
+    
+    G -->|Click Alert Card| H[Open InboundTrackingSheet Bottom Sheet]:::step
+    H -->|Live countdown ETA & simulated timeline| I[Click Pre-Book Seat]:::step
+    
+    I --> J[POST /api/bookings with reverse shuttle sh_KQ07]:::action
+    J --> K[Deduct NGN 500 from User Wallet Balance]:::action
+    K --> L[Generate ticket TKT-xxxx & update client balance]:::action
+```
 
 ---
 
-## 📱 Premium Secure Masked Call Radar Dialing Overlay
+## ⚙️ Core Modules & Decoupled Folders
 
-Clicking the **Call** button on any driver card initiates a secure masked proxy call. We upgraded this overlay to feel extremely premium and modern:
-1.  **Backdrop Blurring:** Uses an elegant semi-transparent navy overlay with heavy blur (`backdropFilter: 'blur(12px)'`) that covers the viewport.
-2.  **Circular Dialing Radar Pulse:** Renders a gorgeous nested circular pulse ring (`pulseRing` and `pulseRing-2` standard vanilla keyframe animations) simulating radar routing connection waves.
-3.  **Secure Connection Timer:** Starts with `"Initiating Secure Routing..."` and dynamically transitions to a glowing green badge `"Secure Routing Established"` after **exactly 3 seconds** of dialing, completely protecting both phone numbers.
-4.  **End Action:** A sleek red dial hang-up button that instantly terminates the proxy session.
+```
+src/
+├── main.ts                     # Core startup pipeline (Validation, exception filtering, request logging)
+├── app.module.ts               # Root assembly, rate limiting, cron schedules
+├── db/                         # File-based DB Persistence & atomic flusher
+├── health/                     # System Telemetry & health checks
+├── user/                       # User profile, wallet ledger, call minute logs
+├── wallet/                     # Monnify sandbox account provisioning & disbursements
+├── driver/                     # Driver ratings & Africa's Talking voice callbacks
+├── shuttle/                    # Route scheduling & vehicle lookups
+└── booking/                    # Ticket generation, complaints, and Live WebSocket Gateway
+```
 
 ---
 
-## 🚀 How to Run & Verify
+## 📡 API Reference & WebSocket Contracts
 
-1.  **Start your NestJS Backend:**
-    ```bash
-    cd raven-backend
-    npm run start:dev
-    ```
-2.  **Start your Vite Frontend:**
-    ```bash
-    cd raven-frontend
-    npm run dev
-    ```
-3.  **Sandbox Wallet Funding:**
-    *   The backend pre-seeds the user `Oluwafemi Sheriff` (`usr_os1`) with **₦15,000** and **10 Call Minutes** directly, allowing you to book, pay, and dial drivers.
+### WebSocket Gateway Namespace: `/booking`
+
+| Event Name | Type | Direction | Data Interface | Description |
+|---|---|---|---|---|
+| `room:join` | Inbound | Client $\rightarrow$ Server | `{ roomId: string }` | Enters a specific shuttle room (e.g. `shuttle_sh_1001`) |
+| `room:leave` | Inbound | Client $\rightarrow$ Server | `{ roomId: string }` | Exits the shuttle room, releasing resources |
+| `seat:lock` | Inbound | Client $\rightarrow$ Server | `{ shuttleId: string, seatNumber: number, userId?: string }` | Requests a seat lock for 2 minutes |
+| `seat:unlock` | Inbound | Client $\rightarrow$ Server | `{ shuttleId: string, seatNumber: number, userId?: string }` | Explicitly releases a locked seat |
+| `sync:initial` | Outbound | Server $\rightarrow$ Client | `{ shuttles: Shuttle[], reverseTrips: any[] }` | Initial state synchronization fired on connection |
+| `seat:locks:sync`| Outbound | Server $\rightarrow$ Client | `{ shuttleId: string, locks: Record<number, Lock> }` | Syncs current active locks on room join |
+| `seat:locked` | Outbound | Server $\rightarrow$ Client | `{ shuttleId: string, seatNumber: number, userId: string }` | Broadcasts that a seat is now temporarily locked |
+| `seat:unlocked` | Outbound | Server $\rightarrow$ Client | `{ shuttleId: string, seatNumber: number }` | Broadcasts that a seat has been freed |
+| `shuttle:details:updated` | Outbound | Server $\rightarrow$ Client | `{ shuttle: Shuttle }` | Syncs updated occupancy when a booking finishes |
+| `transit:reverse-trip:added` | Outbound | Server $\rightarrow$ Client | `{ trip: ReverseTrip }` | Warns passengers that an inbound returning trip is active |
+
+---
+
+## 🛡️ Production Hardening Specs
+
+1. **Strict Validation**: All controller endpoints enforce DTO checks using global class-validators.
+2. **Exception Sanitization**: Stack traces are caught server-side and never leaked in HTTP payloads.
+3. **Throttler Rate Limiter**: Enforces max 100 requests per 60 seconds per IP address to safeguard services.
+4. **Graceful Shutdown**: Calls database flushes and cleanly terminates WS client sockets upon receiving standard SIGTERM terminations.
+5. **Structured Audit Logs**: Every incoming HTTP mutation maps paths, durations, status codes, and sanitized bodies.
+
+---
+
+## 🚀 Quick Setup & Run
+
+### 1. Configure Environment Variables
+Copy `.env.example` to `.env` and fill in Monnify & Africa's Talking API keys:
+```bash
+cp .env.example .env
+```
+
+### 2. Bare-Metal Development Execution
+```bash
+npm install
+npm run start:dev
+```
+
+### 3. Build Production Target
+```bash
+npm run build
+npm run start:prod
+```
+
+### 4. Container Deployment (Docker Compose)
+```bash
+docker compose up -d --build
+```
+This builds a highly optimized multi-stage container and exposes port `5000` with volume persistence.

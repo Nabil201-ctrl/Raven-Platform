@@ -1,98 +1,186 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🐦 Raven Backend — High-Fidelity Real-Time Transit Engine
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Raven is a highly modularized, production-grade, event-driven transit booking backend. Built on **NestJS** and **TypeScript**, it manages seat allocations, synchronized telemetry, secure sandbox digital wallets via **Monnify**, and private voice call bridging via **Africa's Talking**.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🗺️ System Component Architecture
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+The following flowchart illustrates how the client, HTTP REST APIs, the WebSocket Gateway, the persistent datastore, and third-party telecom/fintech sandboxes integrate:
 
-## Project setup
+```mermaid
+graph TD
+    %% Styling
+    classDef client fill:#2563eb,stroke:#3b82f6,stroke-width:2px,color:#ffffff;
+    classDef server fill:#0f172a,stroke:#334155,stroke-width:2px,color:#ffffff;
+    classDef external fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#ffffff;
+    classDef db fill:#16a34a,stroke:#22c55e,stroke-width:2px,color:#ffffff;
 
-```bash
-$ npm install
+    %% Nodes
+    C[React Client Page]:::client
+    S[Socket.io Gateway /booking]:::client
+    
+    API[NestJS HTTP Controllers]:::server
+    SEC[Guards & Throttler]:::server
+    SVC[Domain Services Layer]:::server
+    
+    JSONDB[(Persistent db.json)]:::db
+    
+    MON[Monnify Sandbox API]:::external
+    AT[Africa's Talking SDK]:::external
+
+    %% Relations
+    C -->|REST Requests| SEC
+    SEC --> API
+    API --> SVC
+    
+    C <-->|Bi-directional WS Events| S
+    S -->|Active Locks / TTLs| SVC
+    
+    SVC -->|Atomic Reads / Writes| JSONDB
+    SVC <-->|Disbursement / Reserve Accounts| MON
+    SVC <-->|Voice Masking Webhooks| AT
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+## 🔒 1. Real-Time Seat-Lock engine (WebSocket Flow)
 
-# watch mode
-$ npm run start:dev
+To prevent double-bookings, the system utilizes a high-fidelity concurrent seat-locking flow with automatic 2-minute expiration timers:
 
-# production mode
-$ npm run start:prod
+```mermaid
+sequenceDiagram
+    autonumber
+    actor ClientA as Passenger A
+    actor ClientB as Passenger B
+    participant GW as Socket Gateway (/booking)
+    participant DB as Persistent Datastore
+    
+    ClientA->>GW: seat:lock (Shuttle 1001, Seat 5)
+    Note over GW: Validates lock map in memory
+    GW-->>ClientA: seat:locked (Lock Confirmed)
+    GW-->>ClientB: seat:locked (Seat 5 disabled in UI)
+    
+    rect rgba(245, 158, 11, 0.1)
+        Note over GW: 2-Minute Expiration Timer Running
+        ClientB->>GW: seat:lock (Seat 5)
+        GW-->>ClientB: seat:lock:denied (Seat Locked)
+    end
+    
+    alt Passenger A completes booking before 2m
+        ClientA->>GW: HTTP POST /api/bookings (Finalize Checkout)
+        GW->>DB: Atomic write (Seat 5 booked)
+        GW-->>GW: Clear temporary lock on Seat 5
+        GW-->>ClientA: shuttle:details:updated (Seat Booked)
+        GW-->>ClientB: shuttle:details:updated (Seat 5 Permanently Booked)
+    else 2 Minutes Pass (Timeout)
+        GW-->>GW: cleanupExpiredLocks() runs
+        GW-->>ClientA: seat:unlocked (Seat 5 Released)
+        GW-->>ClientB: seat:unlocked (Seat 5 Clickable Again)
+    end
 ```
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ npm run test
+## 🚐 2. Automated Reverse-Trip & Pre-Booking Flow
 
-# e2e tests
-$ npm run test:e2e
+When a shuttle gets fully booked en route, the engine dynamically triggers a reverse leg inbound trip:
 
-# test coverage
-$ npm run test:cov
+```mermaid
+graph TD
+    %% Styling
+    classDef step fill:#1e293b,stroke:#475569,stroke-width:1.5px,color:#ffffff;
+    classDef decision fill:#7c2d12,stroke:#ea580c,stroke-width:1.5px,color:#ffffff;
+    classDef action fill:#065f46,stroke:#059669,stroke-width:1.5px,color:#ffffff;
+
+    A[User purchases last available seat]:::step --> B{Shuttle availableSeats == 0?}:::decision
+    B -->|Yes| C[Transition shuttle status to FULL]:::action
+    B -->|No| Z[Finalize booking standard flow]:::step
+    
+    C --> D[Generate Inbound Reverse-Trip Entity]:::action
+    D -->|Add ETA time limit + opposite route| E[(Insert in db.reverseTrips)]:::step
+    
+    E --> F[Broadcast live transit:reverse-trip:added event]:::action
+    F --> G[All Passenger Dashboards slide in Alert Card]:::step
+    
+    G -->|Click Alert Card| H[Open InboundTrackingSheet Bottom Sheet]:::step
+    H -->|Live countdown ETA & simulated timeline| I[Click Pre-Book Seat]:::step
+    
+    I --> J[POST /api/bookings with reverse shuttle sh_KQ07]:::action
+    J --> K[Deduct NGN 500 from User Wallet Balance]:::action
+    K --> L[Generate ticket TKT-xxxx & update client balance]:::action
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## ⚙️ Core Modules & Decoupled Folders
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```
+src/
+├── main.ts                     # Core startup pipeline (Validation, exception filtering, request logging)
+├── app.module.ts               # Root assembly, rate limiting, cron schedules
+├── db/                         # File-based DB Persistence & atomic flusher
+├── health/                     # System Telemetry & health checks
+├── user/                       # User profile, wallet ledger, call minute logs
+├── wallet/                     # Monnify sandbox account provisioning & disbursements
+├── driver/                     # Driver ratings & Africa's Talking voice callbacks
+├── shuttle/                    # Route scheduling & vehicle lookups
+└── booking/                    # Ticket generation, complaints, and Live WebSocket Gateway
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## 📡 API Reference & WebSocket Contracts
 
-Check out a few resources that may come in handy when working with NestJS:
+### WebSocket Gateway Namespace: `/booking`
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+| Event Name | Type | Direction | Data Interface | Description |
+|---|---|---|---|---|
+| `room:join` | Inbound | Client $\rightarrow$ Server | `{ roomId: string }` | Enters a specific shuttle room (e.g. `shuttle_sh_1001`) |
+| `room:leave` | Inbound | Client $\rightarrow$ Server | `{ roomId: string }` | Exits the shuttle room, releasing resources |
+| `seat:lock` | Inbound | Client $\rightarrow$ Server | `{ shuttleId: string, seatNumber: number, userId?: string }` | Requests a seat lock for 2 minutes |
+| `seat:unlock` | Inbound | Client $\rightarrow$ Server | `{ shuttleId: string, seatNumber: number, userId?: string }` | Explicitly releases a locked seat |
+| `sync:initial` | Outbound | Server $\rightarrow$ Client | `{ shuttles: Shuttle[], reverseTrips: any[] }` | Initial state synchronization fired on connection |
+| `seat:locks:sync`| Outbound | Server $\rightarrow$ Client | `{ shuttleId: string, locks: Record<number, Lock> }` | Syncs current active locks on room join |
+| `seat:locked` | Outbound | Server $\rightarrow$ Client | `{ shuttleId: string, seatNumber: number, userId: string }` | Broadcasts that a seat is now temporarily locked |
+| `seat:unlocked` | Outbound | Server $\rightarrow$ Client | `{ shuttleId: string, seatNumber: number }` | Broadcasts that a seat has been freed |
+| `shuttle:details:updated` | Outbound | Server $\rightarrow$ Client | `{ shuttle: Shuttle }` | Syncs updated occupancy when a booking finishes |
+| `transit:reverse-trip:added` | Outbound | Server $\rightarrow$ Client | `{ trip: ReverseTrip }` | Warns passengers that an inbound returning trip is active |
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 🛡️ Production Hardening Specs
 
-## Stay in touch
+1. **Strict Validation**: All controller endpoints enforce DTO checks using global class-validators.
+2. **Exception Sanitization**: Stack traces are caught server-side and never leaked in HTTP payloads.
+3. **Throttler Rate Limiter**: Enforces max 100 requests per 60 seconds per IP address to safeguard services.
+4. **Graceful Shutdown**: Calls database flushes and cleanly terminates WS client sockets upon receiving standard SIGTERM terminations.
+5. **Structured Audit Logs**: Every incoming HTTP mutation maps paths, durations, status codes, and sanitized bodies.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+---
 
-## License
+## 🚀 Quick Setup & Run
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### 1. Configure Environment Variables
+Copy `.env.example` to `.env` and fill in Monnify & Africa's Talking API keys:
+```bash
+cp .env.example .env
+```
+
+### 2. Bare-Metal Development Execution
+```bash
+npm install
+npm run start:dev
+```
+
+### 3. Build Production Target
+```bash
+npm run build
+npm run start:prod
+```
+
+### 4. Container Deployment (Docker Compose)
+```bash
+docker compose up -d --build
+```
+This builds a highly optimized multi-stage container and exposes port `5000` with volume persistence.
