@@ -1,29 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import type { Shuttle } from '../types';
-import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon, CrownIcon, MapPinIcon, ClockIcon, StarIcon } from '../icons';
+import { io, Socket } from 'socket.io-client';
 
 export const ShuttleBooking: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getBookedSeats, addBookedSeats } = useAppContext();
-
   const [shuttle, setShuttle] = useState<Shuttle | null>(null);
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
   const [isPremiumMode, setIsPremiumMode] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // All seats considered booked = API booked + locally booked by this user
-  const locallyBooked = id ? getBookedSeats(id) : [];
+  // Real-time seat locking status Map<seatNumber, socketClientId/userId>
+  const [lockedSeats, setLockedSeats] = useState<Record<number, string>>({});
+  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     if (!id) return;
+
+    // Fetch initial REST data
     api.getShuttleDetails(id)
       .then(setShuttle)
       .catch(console.error)
       .finally(() => setLoading(false));
+
+    // Connect to WebSocket namespace 'booking'
+    const socket = io('http://localhost:5000/booking');
+    socketRef.current = socket;
+
+    // Join room for this specific shuttle
+    socket.emit('room:join', { roomId: `shuttle_${id}` });
+
+    // Sync all existing seat locks on join
+    socket.on('seat:locks:sync', (data: { locks: Record<number, { userId: string }> }) => {
+      const active: Record<number, string> = {};
+      for (const [seatStr, lock] of Object.entries(data.locks)) {
+        active[parseInt(seatStr)] = lock.userId;
+      }
+      setLockedSeats(active);
+    });
+
+    // Real-time lock broadcast listener
+    socket.on('seat:locked', (data: { seatNumber: number; userId: string }) => {
+      // Check that it's not locked by current user (since they are in 'selected' state locally)
+      if (data.userId !== socket.id) {
+        setLockedSeats(prev => ({ ...prev, [data.seatNumber]: data.userId }));
+      }
+    });
+
+    // Real-time unlock broadcast listener
+    socket.on('seat:unlocked', (data: { seatNumber: number }) => {
+      setLockedSeats(prev => {
+        const copy = { ...prev };
+        delete copy[data.seatNumber];
+        return copy;
+      });
+    });
+
+    // Real-time finalized seats updates
+    socket.on('shuttle:details:updated', (updatedShuttle: Shuttle) => {
+      setShuttle(updatedShuttle);
+      // Deselect locally if their selected seats are now confirmed by someone else
+      setSelectedSeats(prev => prev.filter(s => !updatedShuttle.bookedSeats.includes(s)));
+    });
+
+    return () => {
+      // Release any locks held by this user before disconnecting
+      selectedSeats.forEach(seatNum => {
+        socket.emit('seat:unlock', { shuttleId: id, seatNumber: seatNum });
+      });
+      socket.emit('room:leave', { roomId: `shuttle_${id}` });
+      socket.disconnect();
+    };
   }, [id]);
 
   if (loading || !shuttle) {
@@ -34,15 +84,25 @@ export const ShuttleBooking: React.FC = () => {
     );
   }
 
-  // Merge API bookedSeats with locally persisted ones
-  const allBookedSeats = [...new Set([...shuttle.bookedSeats, ...locallyBooked])];
+  const allBookedSeats = shuttle.bookedSeats;
 
   const handleSeatToggle = (seatNum: number) => {
     if (allBookedSeats.includes(seatNum)) return;
+    if (lockedSeats[seatNum]) return; // Cannot toggle seats actively locked by others
     if (isPremiumMode) return;
-    setSelectedSeats(prev =>
-      prev.includes(seatNum) ? prev.filter(s => s !== seatNum) : [...prev, seatNum]
-    );
+
+    setSelectedSeats(prev => {
+      const isSelected = prev.includes(seatNum);
+      if (isSelected) {
+        // Unlock seat in backend real-time
+        socketRef.current?.emit('seat:unlock', { shuttleId: shuttle.id, seatNumber: seatNum });
+        return prev.filter(s => s !== seatNum);
+      } else {
+        // Lock seat in backend real-time
+        socketRef.current?.emit('seat:lock', { shuttleId: shuttle.id, seatNumber: seatNum });
+        return [...prev, seatNum];
+      }
+    });
   };
 
   const handlePremium = () => {
@@ -61,9 +121,6 @@ export const ShuttleBooking: React.FC = () => {
     }
     const pricePerSeat = isPremiumMode ? shuttle.premiumPricePerSeat : shuttle.pricePerSeat;
 
-    // Persist seats to context immediately so they show as booked when user returns
-    if (id) addBookedSeats(id, selectedSeats);
-
     navigate('/payment', {
       state: {
         type: 'shuttle',
@@ -81,9 +138,10 @@ export const ShuttleBooking: React.FC = () => {
 
   const totalCost = selectedSeats.length * (isPremiumMode ? shuttle.premiumPricePerSeat : shuttle.pricePerSeat);
 
-  const seatState = (num: number): 'booked' | 'selected' | 'available' => {
+  const seatState = (num: number): 'booked' | 'locked' | 'selected' | 'available' => {
     if (allBookedSeats.includes(num)) return 'booked';
     if (selectedSeats.includes(num)) return 'selected';
+    if (lockedSeats[num]) return 'locked';
     return 'available';
   };
 
@@ -112,7 +170,7 @@ export const ShuttleBooking: React.FC = () => {
               <span className="text-sm font-medium">{shuttle.route.from} → {shuttle.route.to}</span>
             </div>
           </div>
-          <div className="text-xs px-2 py-1 rounded-full font-mono" style={{ background: 'rgba(42,111,245,0.15)', color: 'var(--accent-blue-light)' }}>
+          <div className="text-xs px-2 py-1 rounded-full font-mono" style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)', color: 'var(--accent-blue-light)' }}>
             {shuttle.shuttleCode}
           </div>
         </div>
@@ -167,10 +225,11 @@ export const ShuttleBooking: React.FC = () => {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-4 mb-4 flex-wrap">
           {[
             { label: 'Available', color: 'var(--accent-blue)' },
             { label: 'Booked',    color: '#ef4444' },
+            { label: 'Locked (Pending)', color: '#f59e0b' },
             { label: 'Selected',  color: 'var(--green-active)' },
           ].map(({ label, color }) => (
             <div key={label} className="flex items-center gap-1.5">
@@ -185,23 +244,24 @@ export const ShuttleBooking: React.FC = () => {
           {Array.from({ length: shuttle.totalSeats }, (_, i) => i + 1).map(num => {
             const state = seatState(num);
             const styles = {
-              available: { bg: 'rgba(42,111,245,0.12)', border: 'rgba(42,111,245,0.4)',  text: 'var(--accent-blue-light)' },
-              booked:    { bg: 'rgba(239,68,68,0.15)',  border: 'rgba(239,68,68,0.5)',   text: '#ef4444' },
-              selected:  { bg: 'rgba(34,197,94,0.15)',  border: 'rgba(34,197,94,0.6)',   text: 'var(--green-active)' },
+              available: { bg: 'var(--inset-bg)', border: 'var(--accent-blue)',  text: 'var(--accent-blue-light)' },
+              booked:    { bg: 'var(--inset-bg)',  border: '#ef4444',   text: '#ef4444' },
+              locked:    { bg: 'var(--inset-bg)',  border: '#f59e0b',   text: '#f59e0b' },
+              selected:  { bg: 'var(--inset-bg)',  border: 'var(--green-active)',   text: 'var(--green-active)' },
             }[state];
 
             return (
               <button
                 key={num}
                 onClick={() => handleSeatToggle(num)}
-                disabled={state === 'booked' || isPremiumMode}
+                disabled={state === 'booked' || state === 'locked' || isPremiumMode}
                 className="aspect-square rounded-full flex items-center justify-center font-semibold text-sm transition-all active:scale-95"
                 style={{
                   background: styles.bg,
                   border: `1.5px solid ${styles.border}`,
                   color: styles.text,
-                  cursor: state === 'booked' ? 'not-allowed' : 'pointer',
-                  opacity: state === 'booked' ? 0.7 : 1,
+                  cursor: (state === 'booked' || state === 'locked') ? 'not-allowed' : 'pointer',
+                  opacity: (state === 'booked' || state === 'locked') ? 0.7 : 1,
                 }}
               >
                 {num}

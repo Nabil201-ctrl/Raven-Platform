@@ -2,214 +2,103 @@ import type {
   User, Shuttle, Booking, Transaction, Driver, Complaint, RideHistoryEntry
 } from '../types';
 
-const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+const BASE_URL = 'http://localhost:5000/api';
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options?.headers || {}),
+  };
+  const response = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || response.statusText);
+  }
+  return response.json() as Promise<T>;
+}
 
 export const api = {
   /* ── Auth / User ───────────────────────────────────── */
   async getCurrentUser(): Promise<User> {
-    await delay(300);
-    return {
-      id: 'usr_os1',
-      name: 'Oluwafemi Sheriff',
-      email: 'femi@raven.app',
-      walletBalance: 2450,
-      callMinutes: 12,
-      avatar: '',
-    };
+    return request<User>('/user');
   },
 
   async getWalletBalance(): Promise<number> {
-    await delay(150);
-    return 2450;
+    const res = await request<{ balance: number }>('/user/balance');
+    return res.balance;
   },
 
   async getTransactions(): Promise<Transaction[]> {
-    await delay(200);
-    return [
-      { id: 't1', amount: 700, type: 'debit',  description: 'Shuttle — Giri → Gwagwalada', createdAt: new Date(Date.now() - 3600000).toISOString() },
-      { id: 't2', amount: 150, type: 'debit',  description: 'Call Pack — 10 min',           createdAt: new Date(Date.now() - 7200000).toISOString() },
-      { id: 't3', amount: 2000, type: 'credit', description: 'Wallet Top-up',               createdAt: new Date(Date.now() - 86400000).toISOString() },
-      { id: 't4', amount: 200, type: 'debit',  description: 'Keke — Giri → Gwagwalada',     createdAt: new Date(Date.now() - 172800000).toISOString() },
-    ];
+    return request<Transaction[]>('/user/transactions');
   },
 
-  async deductFromWallet(_amount: number): Promise<void> {
-    await delay(300);
+  async deductFromWallet(amount: number): Promise<User> {
+    return request<User>('/user/deduct', {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    });
   },
 
-  async addToWallet(_amount: number): Promise<void> {
-    await delay(300);
+  async addToWallet(amount: number): Promise<User> {
+    return request<User>('/user/topup', {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    });
   },
 
   async getCallMinutes(): Promise<number> {
-    await delay(150);
-    return 12;
+    const res = await request<{ minutes: number }>('/user/call-minutes');
+    return res.minutes;
   },
 
-  async purchaseCallMinutes(_minutes: number): Promise<void> {
-    await delay(400);
+  async purchaseCallMinutes(minutes: number): Promise<User> {
+    return request<User>('/user/call-minutes/purchase', {
+      method: 'POST',
+      body: JSON.stringify({ minutes }),
+    });
   },
 
-  async consumeCallMinute(): Promise<void> {
-    await delay(100);
+  async consumeCallMinute(): Promise<User> {
+    return request<User>('/user/call-minutes/consume', {
+      method: 'POST',
+    });
   },
 
   /* ── Shuttles ───────────────────────────────────────── */
   async getAvailableShuttles(): Promise<Shuttle[]> {
-    await delay(350);
-    return [
-      {
-        id: 'sh_IE23', shuttleCode: 'Raven Shuttle-IE23',
-        route: { from: 'Giri', to: 'Gwagwalada' },
-        departureTime: '06:00', arrivalTime: '06:20',
-        totalSeats: 19, availableSeats: 19, bookedSeats: [],
-        pricePerSeat: 700, premiumPricePerSeat: 1000,
-        status: 'available',
-        driver: { id: 'd1', name: 'Musa Ibrahim', photo: '', vehicleType: 'shuttle', vehiclePlate: 'RVS-1234', systemCode: 'DRV001', rating: 4.8, isActive: true },
-      },
-      {
-        id: 'sh_KQ07', shuttleCode: 'Raven Shuttle-KQ07',
-        route: { from: 'Gwagwalada', to: 'Giri' },
-        departureTime: '07:30', arrivalTime: '07:50',
-        totalSeats: 14, availableSeats: 6, bookedSeats: [1,2,4,5,6,8,9,11],
-        pricePerSeat: 700, premiumPricePerSeat: 1000,
-        status: 'available',
-        driver: { id: 'd2', name: 'Amina Bello', photo: '', vehicleType: 'shuttle', vehiclePlate: 'RVS-5678', systemCode: 'DRV002', rating: 4.6, isActive: true },
-      },
-      {
-        id: 'sh_PL44', shuttleCode: 'Raven Shuttle-PL44',
-        route: { from: 'Giri', to: 'Gwagwalada' },
-        departureTime: '09:00', arrivalTime: '09:20',
-        totalSeats: 19, availableSeats: 0, bookedSeats: Array.from({ length: 19 }, (_, i) => i + 1),
-        pricePerSeat: 700, premiumPricePerSeat: 1000,
-        status: 'full',
-        driver: { id: 'd3', name: 'John Adeyemi', photo: '', vehicleType: 'shuttle', vehiclePlate: 'RVS-9012', systemCode: 'DRV003', rating: 4.9, isActive: true },
-      },
-    ];
+    return request<Shuttle[]>('/shuttles/available');
   },
 
   async getRecommendedShuttles(): Promise<Shuttle[]> {
-    await delay(300);
-    return [
-      {
-        id: 'sh_RX11', shuttleCode: 'Raven Shuttle-RX11',
-        route: { from: 'Giri', to: 'Gwagwalada' },
-        departureTime: '08:45', arrivalTime: '09:05',
-        totalSeats: 19, availableSeats: 17, bookedSeats: [3, 11],
-        pricePerSeat: 700, premiumPricePerSeat: 1000,
-        status: 'available',
-        driver: { id: 'd4', name: 'Grace Okafor', photo: '', vehicleType: 'shuttle', vehiclePlate: 'RVS-3344', systemCode: 'DRV004', rating: 4.9, isActive: true },
-      },
-      {
-        id: 'sh_MM02', shuttleCode: 'Raven Shuttle-MM02',
-        route: { from: 'Gwagwalada', to: 'Giri' },
-        departureTime: '10:00', arrivalTime: '10:20',
-        totalSeats: 14, availableSeats: 11, bookedSeats: [2, 5, 9],
-        pricePerSeat: 700, premiumPricePerSeat: 1000,
-        status: 'available',
-        driver: { id: 'd5', name: 'Ibrahim Yakubu', photo: '', vehicleType: 'shuttle', vehiclePlate: 'RVS-7788', systemCode: 'DRV005', rating: 4.7, isActive: false },
-      },
-    ];
+    return request<Shuttle[]>('/shuttles/recommended');
   },
 
   async getShuttleDetails(id: string): Promise<Shuttle> {
-    await delay(300);
-    const all = await api.getAvailableShuttles();
-    const found = all.find(s => s.id === id);
-    if (found) return found;
-    return {
-      id, shuttleCode: `Raven Shuttle-${id.toUpperCase()}`,
-      route: { from: 'Giri', to: 'Gwagwalada' },
-      departureTime: '07:15', arrivalTime: '07:35',
-      totalSeats: 19, availableSeats: 15, bookedSeats: [3, 7, 11, 14],
-      pricePerSeat: 700, premiumPricePerSeat: 1000,
-      status: 'available',
-      driver: { id: 'd1', name: 'Musa Ibrahim', photo: '', vehicleType: 'shuttle', vehiclePlate: 'RVS-1234', systemCode: 'DRV001', rating: 4.8, isActive: true },
-    };
+    return request<Shuttle>(`/shuttles/${id}`);
   },
 
   /* ── Keke / Transit ─────────────────────────────────── */
   async verifyDriverCode(code: string): Promise<Driver> {
-    await delay(500);
-    if (!code || code.length < 4) throw new Error('Invalid code');
-    return {
-      id: `drv_${code.toLowerCase()}`,
-      name: 'Aliyu Bello',
-      photo: '',
-      vehicleType: 'keke',
-      vehiclePlate: `KJA-${code}`,
-      systemCode: code.toUpperCase(),
-      rating: 4.9,
-      isActive: true,
-    };
+    return request<Driver>(`/drivers/verify/${code}`);
   },
 
   async getKekeDriverDetails(id: string): Promise<Driver> {
-    await delay(300);
-    return {
-      id,
-      name: 'Aliyu Bello',
-      photo: '',
-      vehicleType: 'keke',
-      vehiclePlate: 'KJA-782BC',
-      systemCode: 'KK782',
-      rating: 4.9,
-      isActive: true,
-    };
+    return request<Driver>(`/drivers/${id}`);
   },
 
   async getLastRide(): Promise<RideHistoryEntry | null> {
-    await delay(250);
-    return {
-      id: 'ride_last1',
-      bookingId: 'book_123',
-      type: 'keke',
-      driver: {
-        id: 'd_kk1',
-        name: 'Aliyu Bello',
-        photo: '',
-        vehicleType: 'keke',
-        vehiclePlate: 'KJA-782BC',
-        systemCode: 'KK782',
-        rating: 4.9,
-        isActive: true,
-        isFavorite: false,
-      },
-      route: 'Giri → Gwagwalada',
-      date: 'Today, 5:15 PM',
-      price: 200,
-      ticketId: 'TKT-F4C00268',
-      canCall: true,
-      canRate: true,
-      isFavorited: false,
-    };
+    try {
+      return await request<RideHistoryEntry>('/rides/last');
+    } catch {
+      return null;
+    }
   },
 
   async getRideDetails(id: string): Promise<RideHistoryEntry> {
-    await delay(200);
-    return {
-      id,
-      bookingId: 'book_123',
-      type: 'keke',
-      driver: {
-        id: 'd_kk1',
-        name: 'Aliyu Bello',
-        photo: '',
-        vehicleType: 'keke',
-        vehiclePlate: 'KJA-782BC',
-        systemCode: 'KK782',
-        rating: 4.9,
-        isActive: true,
-        isFavorite: false,
-      },
-      route: 'Giri → Gwagwalada',
-      date: 'Today, 5:15 PM',
-      price: 200,
-      ticketId: 'TKT-F4C00268',
-      canCall: true,
-      canRate: true,
-      isFavorited: false,
-    };
+    return request<RideHistoryEntry>(`/rides/${id}`);
   },
 
   /* ── Bookings ───────────────────────────────────────── */
@@ -218,64 +107,86 @@ export const api = {
     seats?: number[]; isPremium?: boolean;
     route?: string; shuttleId?: string; departureTime?: string;
   }): Promise<Booking> {
-    await delay(600);
-    return {
-      id: `book_${Date.now()}`,
-      type: data.type as 'shuttle' | 'keke',
-      route: data.route || 'Giri → Gwagwalada',
-      driver: {
-        id: data.driverId || 'd1',
-        name: 'Musa Ibrahim',
-        photo: '',
-        vehicleType: 'shuttle',
-        vehiclePlate: 'RVS-1234',
-        systemCode: 'DRV001',
-        rating: 4.8,
-        isActive: true,
-      },
-      seats: data.seats,
-      seatNumbers: data.seats,
-      totalAmount: data.amount,
-      status: 'confirmed',
-      createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 3600000).toISOString(),
-      ticketId: `TKT-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-      qrCode: '',
-      driverId: data.driverId,
-      departureTime: data.departureTime,
-    };
+    return request<Booking>('/bookings', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 
   async getDriverDetails(driverId: string): Promise<Driver> {
-    await delay(200);
-    return {
-      id: driverId,
-      name: 'Musa Ibrahim',
-      photo: '',
-      vehicleType: 'shuttle',
-      vehiclePlate: 'RVS-1234',
-      systemCode: 'DRV001',
-      rating: 4.8,
-      isActive: true,
-      isFavorite: false,
-    };
+    return request<Driver>(`/drivers/${driverId}`);
   },
 
   /* ── Social / Interaction ───────────────────────────── */
-  async toggleFavoriteDriver(_driverId: string, _isFavorite: boolean): Promise<void> {
-    await delay(200);
+  async toggleFavoriteDriver(driverId: string, isFavorite: boolean): Promise<void> {
+    await request<void>(`/drivers/${driverId}/favorite`, {
+      method: 'POST',
+      body: JSON.stringify({ isFavorite }),
+    });
   },
 
-  async submitComplaint(_complaint: Partial<Complaint>): Promise<void> {
-    await delay(300);
+  async submitComplaint(complaint: Partial<Complaint>): Promise<void> {
+    await request<void>('/complaints', {
+      method: 'POST',
+      body: JSON.stringify(complaint),
+    });
   },
 
-  async rateDriver(_driverId: string, _rating: number): Promise<void> {
-    await delay(200);
+  async rateDriver(driverId: string, rating: number): Promise<void> {
+    await request<void>(`/drivers/${driverId}/rate`, {
+      method: 'POST',
+      body: JSON.stringify({ rating }),
+    });
   },
 
-  async initiateMaskedCall(_driverId: string): Promise<{ callSessionId: string; maxDurationSeconds: number }> {
-    await delay(500);
-    return { callSessionId: `call_${Date.now()}`, maxDurationSeconds: 180 };
+  async initiateMaskedCall(driverId: string): Promise<{ callSessionId: string; maxDurationSeconds: number; proxyPhone?: string }> {
+    return request<{ callSessionId: string; maxDurationSeconds: number; proxyPhone?: string }>(`/drivers/${driverId}/call`, {
+      method: 'POST',
+    });
+  },
+
+  /* ── Monnify Sandbox Additions ──────────────────────── */
+  async createMonnifyWallet(userId: string, name: string, email: string): Promise<any> {
+    return request<any>('/wallet/create', {
+      method: 'POST',
+      body: JSON.stringify({ userId, name, email }),
+    });
+  },
+
+  async pollMonnifyWallet(userId: string): Promise<any> {
+    return request<any>(`/wallet/${userId}`);
+  },
+
+  async simulateDeposit(userId: string, amount: number): Promise<any> {
+    return request<any>('/wallet/mock-deposit', {
+      method: 'POST',
+      body: JSON.stringify({ userId, amount }),
+    });
+  },
+
+  async withdrawFunds(userId: string, amount: number, bankCode: string, accountNumber: string, narration: string): Promise<any> {
+    return request<any>('/wallet/withdraw', {
+      method: 'POST',
+      body: JSON.stringify({ userId, amount, bankCode, accountNumber, narration }),
+    });
+  },
+
+  async getReverseTrips(): Promise<any[]> {
+    return request<any[]>('/transit/reverse-trips');
+  },
+
+  async resetShuttleSeats(code: string): Promise<any> {
+    return request<any>('/transit/reset-seats', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  },
+
+  async getVehicleDetailsByCode(code: string): Promise<any> {
+    return request<any>(`/transit/vehicle/${code}`);
+  },
+
+  async getBooking(id: string): Promise<Booking> {
+    return request<Booking>(`/bookings/${id}`);
   },
 };

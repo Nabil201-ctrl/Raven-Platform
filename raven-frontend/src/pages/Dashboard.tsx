@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { api } from '../services/api';
-import type { Shuttle, Driver } from '../types';
+import type { Shuttle } from '../types';
 import {
   SearchIcon, ClockIcon, ArrowRightIcon,
-  KekeIcon, StarIcon, PhoneIcon, MapPinIcon,
+  KekeIcon, PhoneIcon, MapPinIcon,
 } from '../icons';
+import { io } from 'socket.io-client';
+
 
 /* ── View-all bottom sheet ───────────────────────────── */
 const AllShuttlesSheet: React.FC<{
@@ -130,49 +132,203 @@ const ShuttleCard: React.FC<{ shuttle: Shuttle; onClick: () => void }> = ({ shut
   );
 };
 
+/* ── Inbound reverse trip live tracking sheet ────────── */
+const InboundTrackingSheet: React.FC<{
+  trip: any;
+  onClose: () => void;
+  onPreBook: () => void;
+  bookingLoading: boolean;
+}> = ({ trip, onClose, onPreBook, bookingLoading }) => {
+  const [secondsLeft, setSecondsLeft] = useState(480); // 8 minutes default ETA
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSecondsLeft(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTime = (sec: number) => {
+    const mins = Math.floor(sec / 60);
+    const secs = sec % 60;
+    return `${mins}m ${secs.toString().padStart(2, '0')}s`;
+  };
+
+  const progressPercent = Math.min(100, Math.max(0, ((480 - secondsLeft) / 480) * 100));
+  const isFromGiri = trip.route.includes('Giri →');
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col justify-end"
+      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(5px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="max-w-md mx-auto w-full rounded-t-3xl p-6 pb-10 space-y-6 animate-fade-up"
+        style={{ background: 'var(--bg-app)', border: '1px solid var(--card-border)' }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Handle */}
+        <div className="w-10 h-1 rounded-full mx-auto mb-2" style={{ background: 'var(--card-border)' }} />
+        
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-1 rounded" 
+                  style={{ background: 'rgba(245, 158, 11, 0.12)', color: 'var(--amber-premium)', border: '1px solid rgba(245,158,11,0.2)' }}>
+              Live Inbound Tracking
+            </span>
+            <h3 className="text-xl font-bold mt-2" style={{ color: 'var(--text-primary)' }}>
+              Shuttle {trip.vehicleCode}
+            </h3>
+          </div>
+          <button onClick={onClose} className="text-xs" style={{ color: 'var(--text-muted)' }}>Close</button>
+        </div>
+
+        {/* Live progress indicator */}
+        <div className="rounded-2xl p-4 space-y-4" style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)' }}>
+          <div className="flex justify-between items-center text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <span className="font-semibold">{isFromGiri ? 'Giri' : 'Gwagwalada'}</span>
+            <span className="font-mono text-amber-500 font-bold">ETA: {formatTime(secondsLeft)}</span>
+            <span className="font-semibold">{isFromGiri ? 'Gwagwalada' : 'Giri'}</span>
+          </div>
+
+          {/* Visual Bar with moving shuttle */}
+          <div className="h-2 w-full rounded-full relative" style={{ background: 'var(--card-border)' }}>
+            <div className="h-full rounded-full transition-all duration-1000" 
+                 style={{ width: `${progressPercent}%`, background: 'var(--accent-blue)' }} />
+            
+            {/* Pulsing Shuttle icon */}
+            <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-1000 flex items-center justify-center w-6 h-6 rounded-full bg-amber-500 border border-white text-[10px] text-white shadow-lg animate-pulse"
+                 style={{ left: `${progressPercent}%` }}>
+              🚐
+            </div>
+          </div>
+
+          <p className="text-[11px] text-center italic" style={{ color: 'var(--text-muted)' }}>
+            Shuttle is currently outbound on opposite leg. Returning immediately.
+          </p>
+        </div>
+
+        {/* Vehicle / Driver details */}
+        <div className="flex items-center gap-3 rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm" 
+               style={{ background: 'var(--avatar-bg)', color: 'var(--text-primary)' }}>
+            {trip.driverName.charAt(0)}
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{trip.driverName}</p>
+            <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{trip.vehicleDetails}</p>
+          </div>
+          <div className="text-right">
+            <span className="text-xs px-2 py-0.5 rounded-full font-medium" 
+                  style={{ background: 'rgba(34,197,94,0.12)', color: 'var(--green-active)' }}>
+              INBOUND
+            </span>
+          </div>
+        </div>
+
+        {/* Pre-book CTA */}
+        <button
+          onClick={onPreBook}
+          disabled={bookingLoading || secondsLeft === 0}
+          className="w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] text-white"
+          style={{ 
+            background: 'var(--accent-blue)', 
+            boxShadow: '0 4px 14px 0 rgba(42,111,245,0.3)',
+            opacity: bookingLoading ? 0.6 : 1
+          }}
+        >
+          {bookingLoading ? 'Securing Seat...' : 'Pre-book Returning Seat — ₦500'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 /* ── Main ─────────────────────────────────────────────── */
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { lastRide } = useAppContext();
+  const { lastRide, user, balance, syncState } = useAppContext();
 
   const [searchCode, setSearchCode]           = useState('');
   const [searching, setSearching]             = useState(false);
-  const [verifiedDriver, setVerifiedDriver]   = useState<Driver | null>(null);
   const [availableShuttles, setAvailableShuttles] = useState<Shuttle[]>([]);
   const [recommendedShuttles, setRecommendedShuttles] = useState<Shuttle[]>([]);
+  const [reverseTrips, setReverseTrips]       = useState<any[]>([]);
   const [loading, setLoading]                 = useState(true);
   const [viewAllSheet, setViewAllSheet]       = useState<null | 'available' | 'recommended'>(null);
+  const [trackingTrip, setTrackingTrip]       = useState<any | null>(null);
+  const [preBooking, setPreBooking]           = useState(false);
 
-  useEffect(() => {
-    Promise.all([api.getAvailableShuttles(), api.getRecommendedShuttles()])
-      .then(([avail, recs]) => { setAvailableShuttles(avail); setRecommendedShuttles(recs); })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const handleDriverSearch = async () => {
-    if (!searchCode.trim()) return;
-    setSearching(true);
+  const handlePreBook = async () => {
+    if (!trackingTrip) return;
+    setPreBooking(true);
     try {
-      const driver = await api.verifyDriverCode(searchCode.trim());
-      setVerifiedDriver(driver);
-    } catch {
-      alert('No driver found for that code. Please check and try again.');
+      const response = await api.createBooking({
+        type: 'shuttle',
+        amount: 500,
+        shuttleId: 'sh_KQ07', // Standard return shuttle route
+        seats: [7], // Pre-assign seat 7
+        route: trackingTrip.route,
+        departureTime: '07:30',
+      });
+      alert(`Pre-booking Confirmed!\nTicket Code: ${response.ticketId}\nDriver: ${trackingTrip.driverName}\nSeat pre-assigned: Seat 7.`);
+      setTrackingTrip(null);
+      await syncState();
+    } catch (e: any) {
+      alert(`Pre-booking failed: ${e.message}`);
     } finally {
-      setSearching(false);
+      setPreBooking(false);
     }
   };
 
-  const handlePayDriver = (driver: Driver) => {
-    navigate('/payment', {
-      state: {
-        type: 'keke',
-        driverId: driver.id,
-        driverName: driver.name,
-        vehiclePlate: driver.vehiclePlate,
-        route: 'On-site Keke',
-        priceOptions: [120, 220, 320, 420],
-      },
+  useEffect(() => {
+    // Fetch initial REST data
+    Promise.all([api.getAvailableShuttles(), api.getRecommendedShuttles(), api.getReverseTrips()])
+      .then(([avail, recs, trips]) => { 
+        setAvailableShuttles(avail); 
+        setRecommendedShuttles(recs); 
+        setReverseTrips(trips);
+      })
+      .finally(() => setLoading(false));
+
+    // Connect to WebSocket namespace 'booking'
+    const socket = io('http://localhost:5000/booking');
+
+    // Listen for live reverse trip alerts
+    socket.on('transit:reverse-trip:added', (alert: any) => {
+      setReverseTrips(prev => [alert, ...prev]);
     });
+
+    // Listen for live shuttle state changes (e.g. booked seats, occupancy status)
+    socket.on('shuttle:updated', (updated: Shuttle) => {
+      setAvailableShuttles(prev => prev.map(s => s.id === updated.id ? updated : s));
+      setRecommendedShuttles(prev => prev.map(s => s.id === updated.id ? updated : s));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  const handleDriverSearch = async (overrideCode?: string) => {
+    const code = (overrideCode || searchCode).trim();
+    if (!code) return;
+    setSearching(true);
+    try {
+      const res = await api.getVehicleDetailsByCode(code);
+      if (res.route) {
+        // It is a Shuttle route
+        navigate(`/shuttle/${res.id}`);
+      } else {
+        // It is a Keke / Bike driver profile
+        navigate(`/keke/${res.id}`);
+      }
+    } catch (error) {
+      alert('No active transit vehicle or driver found for that code. Please check and try again.');
+    } finally {
+      setSearching(false);
+    }
   };
 
   const SectionHeader: React.FC<{ label: string; onViewAll?: () => void }> = ({ label, onViewAll }) => (
@@ -195,7 +351,87 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="space-y-8 animate-fade-up">
 
-      {/* ── On-site Keke booking ── */}
+      {/* ── Welcome & Sandbox Wallet Header Widget ── */}
+      <div 
+        className="rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between md:flex-row md:items-center gap-6"
+        style={{ 
+          background: 'var(--card-bg)', 
+          border: '1px solid var(--card-border)',
+          boxShadow: '0 4px 24px 0 rgba(0,0,0,0.06)'
+        }}
+      >
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black leading-tight" style={{ color: 'var(--text-primary)' }}>
+              Hello, {user?.name || 'Oluwafemi'}!
+            </h1>
+          </div>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            Your Monnify virtual account details are active
+          </p>
+          <div className="flex items-center gap-2 mt-2 px-3 py-1.5 rounded-xl text-[11px] font-semibold tracking-wide w-fit"
+               style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)' }}>
+            <span style={{ color: 'var(--accent-blue)' }}>WEMA BANK</span>
+            <span style={{ color: 'var(--text-muted)' }}>·</span>
+            <span className="font-mono cursor-pointer" style={{ color: 'var(--text-primary)' }}
+                  onClick={() => {
+                    navigator.clipboard.writeText("8823490123");
+                    alert("Virtual account number copied: 8823490123");
+                  }}>
+              8823490123 (Copy Account)
+            </span>
+          </div>
+        </div>
+
+        {/* Dynamic Balance Display */}
+        <button 
+          onClick={() => navigate('/wallet')}
+          className="text-left p-4 rounded-2xl flex flex-col justify-center min-w-[180px] transition-all hover:scale-[1.02] active:scale-[0.98]"
+          style={{ 
+            background: 'var(--accent-blue)', 
+            border: 'none',
+          }}
+        >
+          <p className="text-[10px] uppercase font-bold tracking-wider" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            Monnify Wallet Balance
+          </p>
+          <p className="text-2xl font-black mt-1 font-mono" style={{ color: 'white' }}>
+            ₦{balance.toLocaleString('en-NG', { minimumFractionDigits: 2 })}
+          </p>
+          <div className="flex items-center gap-1 mt-2 text-[10px] font-bold" style={{ color: 'rgba(255,255,255,0.85)' }}>
+            <span>Top up Funds</span>
+            <ArrowRightIcon size={10} />
+          </div>
+        </button>
+      </div>
+
+      {/* ── Dynamic Inbound Alert Banner ── */}
+      {reverseTrips.length > 0 && (
+        <div className="rounded-2xl p-4 animate-pulse cursor-pointer"
+             onClick={() => setTrackingTrip(reverseTrips[0])}
+             style={{ 
+               background: 'var(--inset-bg)', 
+               border: '1.5px solid var(--card-border)',
+               boxShadow: '0 0 15px rgba(245, 158, 11, 0.06)'
+             }}>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold px-2 py-1 rounded bg-amber-500/20 text-amber-500 font-mono">ALERT</span>
+            <div className="flex-1">
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--amber-premium)' }}>
+                Reverse Trip Alert
+              </p>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
+                {reverseTrips[0].message}
+              </p>
+            </div>
+            <span className="text-xs font-mono px-2 py-0.5 rounded-full" style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)', color: 'var(--amber-premium)' }}>
+              {reverseTrips[0].status}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ── On-site Booking ── */}
       <section className="animate-fade-up-1">
         <SectionHeader label="ON-SITE BOOKING" />
         <div className="rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
@@ -219,7 +455,7 @@ export const Dashboard: React.FC = () => {
               />
             </div>
             <button
-              onClick={handleDriverSearch}
+              onClick={() => handleDriverSearch()}
               disabled={searching || !searchCode.trim()}
               className="px-4 py-3 rounded-xl text-sm font-semibold transition-all"
               style={{
@@ -232,60 +468,45 @@ export const Dashboard: React.FC = () => {
               {searching ? '…' : 'Search'}
             </button>
           </div>
-        </div>
 
-        {/* Driver verification (State A) */}
-        {verifiedDriver && (
-          <div className="mt-3 rounded-2xl p-4 animate-fade-up"
-            style={{ background: 'var(--card-bg)', border: '1px solid rgba(42, 111, 245, 0.4)' }}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold flex-shrink-0"
-                style={{ background: 'var(--inset-bg)', color: 'var(--text-primary)' }}>
-                {verifiedDriver.name.charAt(0)}
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>{verifiedDriver.name}</h3>
-                <div className="flex items-center gap-1.5 mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                  <KekeIcon size={11} />
-                  <span className="text-xs">{verifiedDriver.vehicleType.toUpperCase()} · {verifiedDriver.vehiclePlate}</span>
-                </div>
-                <div className="flex items-center gap-1 mt-1">
-                  {[1,2,3,4,5].map(s => (
-                    <StarIcon key={s} size={11} filled={s <= Math.round(verifiedDriver.rating)}
-                      style={{ color: s <= Math.round(verifiedDriver.rating) ? '#fbbf24' : 'var(--card-border)' } as React.CSSProperties} />
-                  ))}
-                  <span className="text-xs ml-1" style={{ color: 'var(--text-muted)' }}>{verifiedDriver.rating}</span>
-                </div>
-              </div>
-              <div className="w-2 h-2 rounded-full active-dot"
-                style={{ background: verifiedDriver.isActive ? 'var(--green-active)' : 'var(--text-muted)' }} />
-            </div>
-
-            <div className="rounded-xl px-3 py-2 mb-4 flex justify-between"
-              style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)' }}>
-              <div>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>System Code</p>
-                <p className="text-sm font-bold" style={{ color: 'var(--text-primary)', fontFamily: "'DM Mono', monospace" }}>
-                  {verifiedDriver.systemCode}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Plate</p>
-                <p className="text-sm font-bold" style={{ color: 'var(--text-primary)', fontFamily: "'DM Mono', monospace" }}>
-                  {verifiedDriver.vehiclePlate}
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => handlePayDriver(verifiedDriver)}
-              className="w-full py-3 rounded-xl font-bold text-white transition-all active:scale-[0.98]"
-              style={{ background: 'var(--accent-blue)', border: 'none' }}
+          {/* Quick-tap Transit Code Pills */}
+          <div className="mt-4 pt-4 flex flex-wrap gap-2" style={{ borderTop: '1px solid var(--card-border)' }}>
+            <button 
+              onClick={() => {
+                setSearchCode('1001');
+                handleDriverSearch('1001');
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+              style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)', color: 'var(--accent-blue-light)' }}
             >
-              Pay Fare
+              <span>Shuttle 1001</span>
+            </button>
+            <button 
+              onClick={() => {
+                setSearchCode('2002');
+                handleDriverSearch('2002');
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+              style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)', color: 'var(--accent-cyan)' }}
+            >
+              <span>Keke 2002</span>
+            </button>
+            <button 
+              onClick={async () => {
+                try {
+                  const res = await api.resetShuttleSeats('1001');
+                  alert(`${res.message}`);
+                } catch (e) {
+                  alert('Error resetting seats map');
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+              style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)', color: 'var(--amber-premium)' }}
+            >
+              <span>Reset Seats (Vacant 1)</span>
             </button>
           </div>
-        )}
+        </div>
       </section>
 
       {/* ── Available shuttles ── */}
@@ -325,7 +546,7 @@ export const Dashboard: React.FC = () => {
         </div>
       </section>
 
-      {/* ── Last Ride — reads from context so it updates after every payment ── */}
+      {/* ── Last Ride ── */}
       {lastRide && (
         <section className="animate-fade-up-4">
           <SectionHeader label="LAST RIDE" />
@@ -373,6 +594,16 @@ export const Dashboard: React.FC = () => {
           shuttles={viewAllSheet === 'available' ? availableShuttles : recommendedShuttles}
           onClose={() => setViewAllSheet(null)}
           onSelect={id => navigate(`/shuttle/${id}`)}
+        />
+      )}
+
+      {/* ── Live Inbound Tracking Sheet ── */}
+      {trackingTrip && (
+        <InboundTrackingSheet
+          trip={trackingTrip}
+          bookingLoading={preBooking}
+          onClose={() => setTrackingTrip(null)}
+          onPreBook={handlePreBook}
         />
       )}
     </div>

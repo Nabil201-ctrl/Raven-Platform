@@ -1,0 +1,35 @@
+# Ignore dependencies and builds
+node_modules
+dist
+build
+npm-debug.log
+
+# Ignore local databases and state
+data/db.json
+data
+
+# Ignore environment configuration
+.env
+.env.production
+.env.local
+
+# Ignore tests, coverage, and reports
+coverage
+test
+*.spec.ts
+*.test.ts
+
+# Ignore version control and IDE files
+.git
+.gitignore
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db

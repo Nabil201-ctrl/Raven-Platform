@@ -3,14 +3,14 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useWallet } from '../hooks/useWallet';
 import { useAppContext } from '../context/AppContext';
 import { api } from '../services/api';
-import type { PaymentState, RideHistoryEntry } from '../types';
+import type { PaymentState } from '../types';
 import { ArrowLeftIcon, WalletIcon } from '../icons';
 
 export const Payment: React.FC = () => {
   const location    = useLocation();
   const navigate    = useNavigate();
   const { balance, deductFunds } = useWallet();
-  const { addPendingRide } = useAppContext();
+  const { syncState } = useAppContext();
   const paymentData = location.state as PaymentState | null;
 
   const defaultAmount =
@@ -53,33 +53,14 @@ export const Payment: React.FC = () => {
         type: paymentData.type,
         amount: selectedAmount,
         driverId: paymentData.driverId,
+        shuttleId: paymentData.shuttleId,
         seats: paymentData.selectedSeats,
         isPremium: paymentData.isPremium,
-        route: paymentData.route,
-        shuttleId: paymentData.shuttleId,
+        route: routeLabel,
         departureTime: paymentData.departureTime,
       });
 
-      // Build a RideHistoryEntry and push it into context so:
-      //  - Last Ride on Dashboard updates immediately
-      //  - Profile shows it as a pending ride
-      const driver = await api.getDriverDetails(paymentData.driverId || booking.driver?.id || 'd1');
-      const newRide: RideHistoryEntry = {
-        id: `ride_${Date.now()}`,
-        bookingId: booking.id,
-        type: paymentData.type as 'shuttle' | 'keke',
-        driver,
-        route: routeLabel,
-        date: new Date().toLocaleString('en-NG', {
-          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
-        }),
-        price: selectedAmount,
-        ticketId: booking.ticketId || '',
-        canCall: true,
-        canRate: true,
-        isFavorited: false,
-      };
-      addPendingRide(newRide);
+      await syncState();
 
       navigate(`/confirmation/${booking.id}`, {
         state: { booking: { ...booking, departureTime: paymentData.departureTime }, paymentData },

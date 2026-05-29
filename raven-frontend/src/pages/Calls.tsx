@@ -39,12 +39,12 @@ export const Calls: React.FC = () => {
       <div
         className="rounded-2xl p-6"
         style={{
-          background: 'linear-gradient(135deg, var(--navy-800), #0d1f40)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--card-bg)',
+          border: '1px solid var(--card-border)',
         }}
       >
         <div className="flex items-center gap-2 mb-3">
-          <SignalIcon size={15} style={{ color: 'var(--accent-blue-light)' } as React.CSSProperties} />
+          <SignalIcon size={15} style={{ color: 'var(--accent-blue)' } as React.CSSProperties} />
           <p className="text-xs" style={{ color: 'var(--text-muted)', letterSpacing: '1px' }}>RAVEN CALL PACK</p>
         </div>
 
@@ -61,7 +61,7 @@ export const Calls: React.FC = () => {
         </p>
 
         {/* Progress bar */}
-        <div className="h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
+        <div className="h-1.5 rounded-full" style={{ background: 'var(--inset-bg)' }}>
           <div
             className="h-1.5 rounded-full transition-all duration-700"
             style={{ width: `${minutesPercent}%`, background: 'var(--accent-blue)' }}
@@ -87,12 +87,12 @@ export const Calls: React.FC = () => {
               <div
                 key={pkg.id}
                 className="flex items-center justify-between rounded-2xl px-4 py-4"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+                style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: 'rgba(42,111,245,0.12)', color: 'var(--accent-blue-light)' }}
+                    style={{ background: 'var(--inset-bg)', color: 'var(--accent-blue-light)' }}
                   >
                     <ClockIcon size={16} />
                   </div>
@@ -101,7 +101,7 @@ export const Calls: React.FC = () => {
                       {pkg.minutes} minutes
                       <span
                         className="ml-2 text-xs px-1.5 py-0.5 rounded-full"
-                        style={{ background: 'rgba(42,111,245,0.12)', color: 'var(--accent-blue-light)' }}
+                        style={{ background: 'var(--inset-bg)', color: 'var(--accent-blue-light)' }}
                       >
                         {pkg.label}
                       </span>
@@ -124,7 +124,7 @@ export const Calls: React.FC = () => {
                     disabled={!canAfford || !!purchasing}
                     className="px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
                     style={{
-                      background: canAfford ? 'var(--accent-blue)' : 'rgba(255,255,255,0.07)',
+                      background: canAfford ? 'var(--accent-blue)' : 'var(--inset-bg)',
                       color: canAfford ? 'white' : 'var(--text-muted)',
                       cursor: !canAfford ? 'not-allowed' : 'pointer',
                     }}
@@ -141,7 +141,7 @@ export const Calls: React.FC = () => {
       {/* Info card */}
       <div
         className="rounded-2xl p-4"
-        style={{ background: 'rgba(42,111,245,0.06)', border: '1px solid rgba(42,111,245,0.15)' }}
+        style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)' }}
       >
         <div className="flex items-start gap-3">
           <PhoneIcon size={16} style={{ color: 'var(--accent-blue-light)', flexShrink: 0 } as React.CSSProperties} />

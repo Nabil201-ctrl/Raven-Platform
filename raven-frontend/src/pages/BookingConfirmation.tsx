@@ -32,25 +32,42 @@ const QrPlaceholder: React.FC = () => (
 
 /* ── Component ───────────────────────────────────────── */
 export const BookingConfirmation: React.FC = () => {
-  useParams<{ bookingId: string }>();
+  const { bookingId } = useParams<{ bookingId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [booking] = useState<Booking | null>(location.state?.booking ?? null);
+  const [booking, setBooking] = useState<Booking | null>(location.state?.booking ?? null);
   const [driver, setDriver] = useState<Driver | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [loading, setLoading] = useState(!booking);
 
   useEffect(() => {
-    const bk: Booking | null = booking;
-    if (bk?.driverId) {
-      api.getDriverDetails(bk.driverId).then(setDriver).catch(console.error);
+    if (!booking && bookingId) {
+      api.getBooking(bookingId)
+        .then(setBooking)
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }
+  }, [bookingId, booking]);
+
+  useEffect(() => {
+    if (booking?.driverId) {
+      api.getDriverDetails(booking.driverId).then(setDriver).catch(console.error);
     }
   }, [booking]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-sm">Loading booking details…</p>
+      </div>
+    );
+  }
 
   if (!booking) {
     return (
       <div className="text-center py-16" style={{ color: 'var(--text-muted)' }}>
-        <p className="text-sm">Booking not found.</p>
+        <p className="text-sm">Booking ticket not found or expired.</p>
         <button onClick={() => navigate('/')} className="mt-3 underline" style={{ color: 'var(--accent-blue-light)' }}>
           Return home
         </button>
@@ -213,12 +230,12 @@ export const BookingConfirmation: React.FC = () => {
       {driver && (
         <div
           className="rounded-2xl p-4 space-y-4"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
         >
           <div className="flex items-center gap-3">
             <div
               className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0"
-              style={{ background: 'var(--navy-700)', color: 'var(--text-primary)' }}
+              style={{ background: 'var(--avatar-bg)', color: 'var(--text-primary)' }}
             >
               {driver.name.charAt(0)}
             </div>
@@ -235,8 +252,9 @@ export const BookingConfirmation: React.FC = () => {
                 <span
                   className="ml-2 text-xs px-2 py-0.5 rounded-full"
                   style={{
-                    background: driver.isActive ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.06)',
+                    background: driver.isActive ? 'var(--inset-bg)' : 'var(--inset-bg)',
                     color: driver.isActive ? 'var(--green-active)' : 'var(--text-muted)',
+                    border: '1px solid var(--card-border)',
                   }}
                 >
                   {driver.isActive ? 'Online' : 'Offline'}
@@ -246,7 +264,7 @@ export const BookingConfirmation: React.FC = () => {
             <button
               onClick={handleCall}
               className="p-2.5 rounded-full transition-all active:scale-95"
-              style={{ background: 'rgba(42,111,245,0.15)', color: 'var(--accent-blue-light)' }}
+              style={{ background: 'var(--inset-bg)', color: 'var(--accent-blue-light)', border: '1px solid var(--card-border)' }}
             >
               <PhoneIcon size={16} />
             </button>
@@ -264,8 +282,8 @@ export const BookingConfirmation: React.FC = () => {
                 onClick={action}
                 className="flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all active:scale-95"
                 style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'var(--inset-bg)',
+                  border: '1px solid var(--card-border)',
                   color: active ? activeColor : 'var(--text-secondary)',
                 }}
               >

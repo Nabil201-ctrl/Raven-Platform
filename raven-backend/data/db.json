@@ -1,0 +1,327 @@
+{
+  "currentUser": {
+    "id": "usr_os1",
+    "name": "Oluwafemi Sheriff",
+    "email": "femi@raven.app",
+    "walletBalance": 14760,
+    "avatar": "",
+    "callMinutes": 10
+  },
+  "walletDetails": {
+    "balance": 14760,
+    "accountNumber": "8823490123",
+    "bankName": "Wema Bank (Simulated Sandbox)",
+    "accountReference": "REF-SIM-usr_os1-1780049356237",
+    "currency": "NGN"
+  },
+  "drivers": [
+    {
+      "id": "d1",
+      "name": "Mustapha Yusuf",
+      "photo": "",
+      "vehicleType": "shuttle",
+      "vehiclePlate": "ABJ-123-XY",
+      "systemCode": "1001",
+      "rating": 4.8,
+      "isActive": true,
+      "isFavorite": false
+    },
+    {
+      "id": "d2",
+      "name": "Amina Bello",
+      "photo": "",
+      "vehicleType": "shuttle",
+      "vehiclePlate": "RVS-5678",
+      "systemCode": "DRV002",
+      "rating": 4.6,
+      "isActive": true,
+      "isFavorite": false
+    },
+    {
+      "id": "d3",
+      "name": "John Adeyemi",
+      "photo": "",
+      "vehicleType": "shuttle",
+      "vehiclePlate": "RVS-9012",
+      "systemCode": "DRV003",
+      "rating": 4.9,
+      "isActive": true,
+      "isFavorite": false
+    },
+    {
+      "id": "d4",
+      "name": "Grace Okafor",
+      "photo": "",
+      "vehicleType": "shuttle",
+      "vehiclePlate": "RVS-3344",
+      "systemCode": "DRV004",
+      "rating": 4.9,
+      "isActive": true,
+      "isFavorite": false
+    },
+    {
+      "id": "d5",
+      "name": "Ibrahim Yakubu",
+      "photo": "",
+      "vehicleType": "shuttle",
+      "vehiclePlate": "RVS-7788",
+      "systemCode": "DRV005",
+      "rating": 4.7,
+      "isActive": false,
+      "isFavorite": false
+    },
+    {
+      "id": "d_kk1",
+      "name": "Ibrahim Bello",
+      "photo": "",
+      "vehicleType": "keke",
+      "vehiclePlate": "KDS-789-QA",
+      "systemCode": "2002",
+      "rating": 4.9,
+      "isActive": true,
+      "isFavorite": false
+    }
+  ],
+  "shuttles": [
+    {
+      "id": "sh_1001",
+      "shuttleCode": "1001",
+      "route": {
+        "from": "Giri",
+        "to": "Gwagwalada"
+      },
+      "departureTime": "06:00",
+      "arrivalTime": "06:20",
+      "totalSeats": 14,
+      "availableSeats": 1,
+      "bookedSeats": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "pricePerSeat": 500,
+      "premiumPricePerSeat": 800,
+      "status": "available",
+      "driver": {
+        "id": "d1",
+        "name": "Mustapha Yusuf",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-123-XY",
+        "systemCode": "1001",
+        "rating": 4.8,
+        "isActive": true,
+        "isFavorite": false
+      }
+    },
+    {
+      "id": "sh_IE23",
+      "shuttleCode": "Raven Shuttle-IE23",
+      "route": {
+        "from": "Giri",
+        "to": "Gwagwalada"
+      },
+      "departureTime": "06:00",
+      "arrivalTime": "06:20",
+      "totalSeats": 19,
+      "availableSeats": 19,
+      "bookedSeats": [],
+      "pricePerSeat": 700,
+      "premiumPricePerSeat": 1000,
+      "status": "available",
+      "driver": {
+        "id": "d1",
+        "name": "Mustapha Yusuf",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-123-XY",
+        "systemCode": "1001",
+        "rating": 4.8,
+        "isActive": true,
+        "isFavorite": false
+      }
+    },
+    {
+      "id": "sh_KQ07",
+      "shuttleCode": "Raven Shuttle-KQ07",
+      "route": {
+        "from": "Gwagwalada",
+        "to": "Giri"
+      },
+      "departureTime": "07:30",
+      "arrivalTime": "07:50",
+      "totalSeats": 14,
+      "availableSeats": 6,
+      "bookedSeats": [
+        1,
+        2,
+        4,
+        5,
+        6,
+        8,
+        9,
+        11
+      ],
+      "pricePerSeat": 700,
+      "premiumPricePerSeat": 1000,
+      "status": "available",
+      "driver": {
+        "id": "d2",
+        "name": "Amina Bello",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "RVS-5678",
+        "systemCode": "DRV002",
+        "rating": 4.6,
+        "isActive": true,
+        "isFavorite": false
+      }
+    }
+  ],
+  "transactions": [
+    {
+      "id": "t_1780053041247",
+      "amount": 120,
+      "type": "debit",
+      "description": "Deducted from wallet",
+      "createdAt": "2026-05-29T11:10:41.247Z"
+    },
+    {
+      "id": "t_1780053041208",
+      "amount": 120,
+      "type": "debit",
+      "description": "Deducted from wallet",
+      "createdAt": "2026-05-29T11:10:41.208Z"
+    },
+    {
+      "id": "t1",
+      "amount": 500,
+      "type": "debit",
+      "description": "Shuttle — Giri ⇄ Gwagwalada",
+      "createdAt": "2026-05-29T09:09:16.237Z"
+    },
+    {
+      "id": "t2",
+      "amount": 150,
+      "type": "debit",
+      "description": "Call Pack — 10 min",
+      "createdAt": "2026-05-29T08:09:16.237Z"
+    },
+    {
+      "id": "t3",
+      "amount": 15000,
+      "type": "credit",
+      "description": "Monnify Sandbox Preload",
+      "createdAt": "2026-05-28T10:09:16.237Z"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "book_1780053041248",
+      "type": "keke",
+      "route": "Giri ⇄ Gwagwalada",
+      "driver": {
+        "id": "d_kk1",
+        "name": "Ibrahim Bello",
+        "photo": "",
+        "vehicleType": "keke",
+        "vehiclePlate": "KDS-789-QA",
+        "systemCode": "2002",
+        "rating": 4.9,
+        "isActive": true,
+        "isFavorite": false
+      },
+      "totalAmount": 120,
+      "status": "confirmed",
+      "createdAt": "2026-05-29T11:10:41.248Z",
+      "expiresAt": "2026-05-29T12:10:41.248Z",
+      "ticketId": "TKT-R4H2X6N2",
+      "qrCode": "",
+      "driverId": "d_kk1"
+    }
+  ],
+  "complaints": [],
+  "reverseTrips": [],
+  "rideHistory": [
+    {
+      "id": "ride_last1",
+      "bookingId": "book_123",
+      "type": "keke",
+      "driver": {
+        "id": "d_kk1",
+        "name": "Ibrahim Bello",
+        "photo": "",
+        "vehicleType": "keke",
+        "vehiclePlate": "KDS-789-QA",
+        "systemCode": "2002",
+        "rating": 4.9,
+        "isActive": true,
+        "isFavorite": false
+      },
+      "route": "Gate 1 ⇄ Faculty of Engineering",
+      "date": "Today, 5:15 PM",
+      "price": 300,
+      "ticketId": "TKT-F4C00268",
+      "canCall": true,
+      "canRate": true,
+      "isFavorited": false
+    },
+    {
+      "id": "book_1780053041248",
+      "bookingId": "book_1780053041248",
+      "type": "keke",
+      "driver": {
+        "id": "d_kk1",
+        "name": "Ibrahim Bello",
+        "photo": "",
+        "vehicleType": "keke",
+        "vehiclePlate": "KDS-789-QA",
+        "systemCode": "2002",
+        "rating": 4.9,
+        "isActive": true,
+        "isFavorite": false
+      },
+      "route": "Giri ⇄ Gwagwalada",
+      "date": "Today, Just now",
+      "price": 120,
+      "ticketId": "TKT-R4H2X6N2",
+      "canCall": true,
+      "canRate": true,
+      "isFavorited": false
+    }
+  ],
+  "lastRide": {
+    "id": "book_1780053041248",
+    "bookingId": "book_1780053041248",
+    "type": "keke",
+    "driver": {
+      "id": "d_kk1",
+      "name": "Ibrahim Bello",
+      "photo": "",
+      "vehicleType": "keke",
+      "vehiclePlate": "KDS-789-QA",
+      "systemCode": "2002",
+      "rating": 4.9,
+      "isActive": true,
+      "isFavorite": false
+    },
+    "route": "Giri ⇄ Gwagwalada",
+    "date": "Today, Just now",
+    "price": 120,
+    "ticketId": "TKT-R4H2X6N2",
+    "canCall": true,
+    "canRate": true,
+    "isFavorited": false
+  },
+  "processedPayments": []
+}

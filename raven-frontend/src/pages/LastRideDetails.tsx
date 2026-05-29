@@ -16,6 +16,11 @@ export const LastRideDetails: React.FC = () => {
   const [ride, setRide] = useState<RideHistoryEntry | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [userRating, setUserRating] = useState(0);
+  const [activeCall, setActiveCall] = useState<{
+    proxyPhone: string;
+    driverName: string;
+    established: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -40,9 +45,16 @@ export const LastRideDetails: React.FC = () => {
       return;
     }
     try {
-      await api.initiateMaskedCall(ride.driver.id);
+      const res = await api.initiateMaskedCall(ride.driver.id);
       useCallMinute();
-      alert('Connecting masked call… Your number is protected.');
+      setActiveCall({
+        proxyPhone: res.proxyPhone || (ride.driver.systemCode === '1001' ? '+234 700 748 8853' : '+234 700 748 8854'),
+        driverName: ride.driver.name,
+        established: false,
+      });
+      setTimeout(() => {
+        setActiveCall(prev => prev ? { ...prev, established: true } : null);
+      }, 3000);
     } catch {
       alert('Could not initiate call. Please try again.');
     }
@@ -84,16 +96,16 @@ export const LastRideDetails: React.FC = () => {
         LAST RIDE
       </p>
 
-      {/* Driver profile card — State B */}
+      {/* Driver profile card */}
       <div
         className="rounded-2xl p-5 space-y-5"
-        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
       >
         {/* Top row */}
         <div className="flex items-start gap-4">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold flex-shrink-0"
-            style={{ background: 'var(--navy-700)', color: 'var(--text-primary)' }}
+            style={{ background: 'var(--avatar-bg)', color: 'var(--text-primary)' }}
           >
             {ride.driver.name.charAt(0)}
           </div>
@@ -115,8 +127,8 @@ export const LastRideDetails: React.FC = () => {
                 onClick={handleToggleFavorite}
                 className="p-2 rounded-full transition-all active:scale-90"
                 style={{
-                  background: isFavorite ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.06)',
-                  border: `1px solid ${isFavorite ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.1)'}`,
+                  background: isFavorite ? 'rgba(239,68,68,0.12)' : 'var(--inset-bg)',
+                  border: `1px solid ${isFavorite ? 'rgba(239,68,68,0.3)' : 'var(--card-border)'}`,
                   color: isFavorite ? '#ef4444' : 'var(--text-muted)',
                 }}
               >
@@ -132,7 +144,7 @@ export const LastRideDetails: React.FC = () => {
                     size={15}
                     filled={s <= (userRating || Math.round(ride.driver.rating))}
                     className={s <= (userRating || Math.round(ride.driver.rating)) ? 'text-amber-400' : ''}
-                    style={{ color: s <= (userRating || Math.round(ride.driver.rating)) ? '#fbbf24' : 'rgba(255,255,255,0.2)' } as React.CSSProperties}
+                    style={{ color: s <= (userRating || Math.round(ride.driver.rating)) ? '#fbbf24' : 'var(--text-muted)' } as React.CSSProperties}
                   />
                 </button>
               ))}
@@ -156,7 +168,7 @@ export const LastRideDetails: React.FC = () => {
         </div>
 
         {/* Divider */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }} />
+        <div style={{ borderTop: '1px solid var(--card-border)' }} />
 
         {/* Action buttons */}
         <div className="grid grid-cols-3 gap-2">
@@ -164,8 +176,8 @@ export const LastRideDetails: React.FC = () => {
             onClick={handleCall}
             className="flex flex-col items-center gap-2 py-4 rounded-xl transition-all active:scale-95"
             style={{
-              background: 'rgba(42,111,245,0.1)',
-              border: '1px solid rgba(42,111,245,0.25)',
+              background: 'var(--inset-bg)',
+              border: '1px solid var(--card-border)',
               color: 'var(--accent-blue-light)',
             }}
           >
@@ -177,8 +189,8 @@ export const LastRideDetails: React.FC = () => {
             onClick={handleComplaint}
             className="flex flex-col items-center gap-2 py-4 rounded-xl transition-all active:scale-95"
             style={{
-              background: 'rgba(245,158,11,0.08)',
-              border: '1px solid rgba(245,158,11,0.2)',
+              background: 'var(--inset-bg)',
+              border: '1px solid var(--card-border)',
               color: 'var(--amber-premium)',
             }}
           >
@@ -190,8 +202,8 @@ export const LastRideDetails: React.FC = () => {
             onClick={() => handleRate(5)}
             className="flex flex-col items-center gap-2 py-4 rounded-xl transition-all active:scale-95"
             style={{
-              background: 'rgba(34,197,94,0.08)',
-              border: '1px solid rgba(34,197,94,0.2)',
+              background: 'var(--inset-bg)',
+              border: '1px solid var(--card-border)',
               color: 'var(--green-active)',
             }}
           >
@@ -204,7 +216,7 @@ export const LastRideDetails: React.FC = () => {
       {/* Ride summary card */}
       <div
         className="rounded-2xl p-4"
-        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
       >
         <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-muted)', letterSpacing: '1px' }}>
           RIDE SUMMARY
@@ -214,7 +226,7 @@ export const LastRideDetails: React.FC = () => {
           { label: 'Amount paid', value: `₦${ride.price.toLocaleString()}`, mono: true },
           { label: 'Ticket ID', value: ride.ticketId, mono: true },
         ].map(({ label, value, mono }) => (
-          <div key={label} className="flex justify-between py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <div key={label} className="flex justify-between py-2" style={{ borderBottom: '1px solid var(--card-border)' }}>
             <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{label}</span>
             <span
               className="text-sm font-semibold"
@@ -225,6 +237,71 @@ export const LastRideDetails: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Secure Masked Call Overlay */}
+      {activeCall && (
+        <div
+          className="fixed inset-0 z-55 flex flex-col items-center justify-center p-6 animate-fade-in"
+          style={{ background: 'rgba(0, 10, 30, 0.95)', backdropFilter: 'blur(12px)', position: 'fixed', left: 0, right: 0, top: 0, bottom: 0 }}
+        >
+          <style>{`
+            @keyframes pulseRing {
+              0% { transform: scale(0.95); opacity: 0.8; }
+              50% { transform: scale(1.15); opacity: 0.35; }
+              100% { transform: scale(1.35); opacity: 0; }
+            }
+            .pulse-ring {
+              position: absolute;
+              inset: -20px;
+              border: 2px solid var(--accent-blue);
+              border-radius: 50%;
+              animation: pulseRing 2s infinite ease-out;
+            }
+            .pulse-ring-2 {
+              position: absolute;
+              inset: -40px;
+              border: 2px solid var(--accent-cyan);
+              border-radius: 50%;
+              animation: pulseRing 2s infinite ease-out;
+              animation-delay: 0.75s;
+            }
+          `}</style>
+
+          <div className="relative w-40 h-40 rounded-full flex items-center justify-center mb-8"
+               style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)' }}>
+            <div className="pulse-ring" />
+            <div className="pulse-ring-2" />
+            <div className="w-32 h-32 rounded-full flex items-center justify-center" style={{ background: 'var(--avatar-bg)' }}>
+              <PhoneIcon size={44} style={{ color: activeCall.established ? 'var(--green-active)' : 'var(--accent-blue-light)' } as React.CSSProperties} />
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-bold text-center text-white mb-2">{activeCall.driverName}</h2>
+          <p className="text-sm text-center mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>SECURE PROXY DIALING</p>
+          <p className="text-xl font-bold font-mono tracking-wide text-center mb-6" style={{ color: 'var(--accent-blue-light)' }}>
+            {activeCall.proxyPhone}
+          </p>
+
+          <div className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider mb-12"
+               style={{ 
+                 background: activeCall.established ? 'rgba(34,197,94,0.12)' : 'rgba(42,111,245,0.12)', 
+                 color: activeCall.established ? 'var(--green-active)' : 'var(--accent-blue-light)',
+                 border: `1px solid ${activeCall.established ? 'rgba(34,197,94,0.3)' : 'rgba(42,111,245,0.3)'}`
+               }}>
+            {activeCall.established ? 'Secure Routing Established' : 'Initiating Secure Routing...'}
+          </div>
+
+          <button
+            onClick={() => setActiveCall(null)}
+            className="w-16 h-16 rounded-full flex items-center justify-center bg-red-600 hover:bg-red-700 active:scale-95 transition-all shadow-lg"
+            style={{ border: 'none' }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 text-white rotate-[135deg]">
+              <path fillRule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 0 1-.694 1.955l-1.293.97c-.135.101-.18.282-.108.43a13.39 13.39 0 0 0 5.252 5.252c.148.072.33.027.43-.108l.97-1.293a1.875 1.875 0 0 1 1.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

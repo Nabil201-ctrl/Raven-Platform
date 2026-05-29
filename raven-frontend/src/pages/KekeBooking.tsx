@@ -62,12 +62,12 @@ export const KekeBooking: React.FC = () => {
       {/* Driver card */}
       <div
         className="rounded-2xl p-5"
-        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
       >
         <div className="flex items-center gap-4">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold"
-            style={{ background: 'var(--navy-700)', color: 'var(--text-primary)' }}
+            style={{ background: 'var(--avatar-bg)', color: 'var(--text-primary)' }}
           >
             {driver.name.charAt(0)}
           </div>
@@ -82,15 +82,16 @@ export const KekeBooking: React.FC = () => {
             <div className="flex items-center gap-1 mt-1.5">
               {[1,2,3,4,5].map(s => (
                 <StarIcon key={s} size={12} filled={s <= Math.round(driver.rating)} className="text-amber-400"
-                  style={{ color: s <= Math.round(driver.rating) ? '#fbbf24' : 'rgba(255,255,255,0.15)' } as React.CSSProperties}
+                  style={{ color: s <= Math.round(driver.rating) ? '#fbbf24' : 'var(--text-muted)' } as React.CSSProperties}
                 />
               ))}
               <span className="text-xs ml-1" style={{ color: 'var(--text-muted)' }}>{driver.rating}</span>
               <span
                 className="ml-2 text-xs px-2 py-0.5 rounded-full"
                 style={{
-                  background: driver.isActive ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.06)',
+                  background: driver.isActive ? 'var(--inset-bg)' : 'var(--inset-bg)',
                   color: driver.isActive ? 'var(--green-active)' : 'var(--text-muted)',
+                  border: '1px solid var(--card-border)',
                 }}
               >
                 {driver.isActive ? 'Online' : 'Offline'}
@@ -101,7 +102,7 @@ export const KekeBooking: React.FC = () => {
 
         <div
           className="mt-4 rounded-xl px-3 py-2 flex justify-between"
-          style={{ background: 'rgba(0,0,0,0.2)' }}
+          style={{ background: 'var(--inset-bg)' }}
         >
           <div>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>System Code</p>
@@ -125,7 +126,7 @@ export const KekeBooking: React.FC = () => {
       {/* Price chips */}
       <div
         className="rounded-2xl p-4"
-        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
       >
         <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-muted)', letterSpacing: '1px' }}>
           SELECT FARE
@@ -137,8 +138,8 @@ export const KekeBooking: React.FC = () => {
               onClick={() => handlePayment(amt)}
               className="py-3 rounded-xl font-bold text-sm transition-all active:scale-95"
               style={{
-                background: 'rgba(42,111,245,0.1)',
-                border: '1px solid rgba(42,111,245,0.25)',
+                background: 'var(--inset-bg)',
+                border: '1px solid var(--card-border)',
                 color: 'var(--accent-blue-light)',
                 fontFamily: "'DM Mono', monospace",
               }}
@@ -156,8 +157,8 @@ export const KekeBooking: React.FC = () => {
           }}
           className="mt-2 w-full py-3 rounded-xl text-sm font-medium transition-all"
           style={{
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--inset-bg)',
+            border: '1px solid var(--card-border)',
             color: 'var(--text-muted)',
           }}
         >

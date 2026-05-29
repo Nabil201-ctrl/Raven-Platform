@@ -42,7 +42,7 @@ const Toggle: React.FC<{ on: boolean; onToggle: () => void }> = ({ on, onToggle 
       width: 44,
       height: 24,
       borderRadius: 12,
-      background: on ? 'var(--accent-blue)' : 'rgba(255,255,255,0.15)',
+      background: on ? 'var(--accent-blue)' : 'var(--inset-bg)',
       border: 'none',
       cursor: 'pointer',
     }}
