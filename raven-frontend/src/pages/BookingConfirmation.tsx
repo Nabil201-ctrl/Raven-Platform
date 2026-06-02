@@ -6,31 +6,7 @@ import {
   CheckCircleIcon, StarIcon, HeartIcon, FlagIcon, ThumbsUpIcon, PhoneIcon, ArrowLeftIcon,
 } from '../icons';
 
-/* ── QR placeholder (SVG pattern) ───────────────────── */
-const QrPlaceholder: React.FC = () => (
-  <svg viewBox="0 0 80 80" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
-    {/* Outer corners */}
-    <rect x="2" y="2" width="22" height="22" rx="2" fill="none" stroke="currentColor" strokeWidth="2.5"/>
-    <rect x="6" y="6" width="14" height="14" rx="1" fill="currentColor" opacity="0.7"/>
-    <rect x="56" y="2" width="22" height="22" rx="2" fill="none" stroke="currentColor" strokeWidth="2.5"/>
-    <rect x="60" y="6" width="14" height="14" rx="1" fill="currentColor" opacity="0.7"/>
-    <rect x="2" y="56" width="22" height="22" rx="2" fill="none" stroke="currentColor" strokeWidth="2.5"/>
-    <rect x="6" y="60" width="14" height="14" rx="1" fill="currentColor" opacity="0.7"/>
-    {/* Middle dots pattern */}
-    {[28,32,36,40,44,48,52].flatMap(x =>
-      [28,32,36,40,44,48,52].map(y =>
-        Math.random() > 0.4 ? <rect key={`${x}${y}`} x={x} y={y} width="3" height="3" rx="0.5" fill="currentColor" opacity="0.5"/> : null
-      )
-    )}
-    {/* bottom-right data area */}
-    <rect x="56" y="56" width="22" height="22" rx="1" fill="currentColor" opacity="0.08"/>
-    <rect x="60" y="60" width="6" height="6" rx="0.5" fill="currentColor" opacity="0.5"/>
-    <rect x="68" y="60" width="6" height="6" rx="0.5" fill="currentColor" opacity="0.5"/>
-    <rect x="60" y="68" width="6" height="6" rx="0.5" fill="currentColor" opacity="0.5"/>
-  </svg>
-);
-
-/* ── Component ───────────────────────────────────────── */
+import QRCode from 'react-qr-code';
 export const BookingConfirmation: React.FC = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const location = useLocation();
@@ -219,8 +195,8 @@ export const BookingConfirmation: React.FC = () => {
 
         {/* QR code */}
         <div className="px-5 py-4 flex flex-col items-center gap-2">
-          <div style={{ color: 'var(--navy-900)', opacity: 0.85 }}>
-            <QrPlaceholder />
+          <div style={{ color: 'var(--navy-900)', opacity: 0.85, background: 'white', padding: '8px', borderRadius: '8px' }}>
+            <QRCode value={`ticket:${booking.ticketId}`} size={80} level="M" />
           </div>
           <p className="text-xs" style={{ color: '#7a92b0' }}>Scan to verify</p>
         </div>
@@ -294,6 +270,18 @@ export const BookingConfirmation: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Download Receipt Button */}
+      <button
+        onClick={() => window.print()}
+        className="w-full py-3 mt-4 rounded-xl text-sm font-bold transition-all text-white active:scale-95 flex items-center justify-center gap-2"
+        style={{ background: 'var(--accent-blue)', boxShadow: '0 4px 12px rgba(42, 111, 245, 0.2)' }}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+          <path fillRule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v11.69l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.22 3.22V3a.75.75 0 0 1 .75-.75Zm-9 13.5a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+        </svg>
+        Download / Print Receipt
+      </button>
     </div>
   );
 };

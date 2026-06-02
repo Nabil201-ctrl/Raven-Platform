@@ -5,6 +5,8 @@ export interface User {
   avatar?: string;
   walletBalance: number;
   callMinutes: number;
+  accountNumber?: string;
+  bankName?: string;
 }
 
 export interface Driver {

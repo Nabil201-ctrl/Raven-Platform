@@ -1,17 +1,17 @@
 {
   "currentUser": {
-    "id": "usr_os1",
-    "name": "Oluwafemi Sheriff",
-    "email": "femi@raven.app",
-    "walletBalance": 14760,
-    "avatar": "",
-    "callMinutes": 10
+    "id": "usr_1780350039594",
+    "name": "Nabil Abubakar",
+    "email": "nabil_1780350039584@raven.app",
+    "walletBalance": 14200,
+    "callMinutes": 20,
+    "avatar": ""
   },
   "walletDetails": {
-    "balance": 14760,
-    "accountNumber": "8823490123",
+    "balance": 14200,
+    "accountNumber": "8859500795",
     "bankName": "Wema Bank (Simulated Sandbox)",
-    "accountReference": "REF-SIM-usr_os1-1780049356237",
+    "accountReference": "REF-SIM-usr_1780350039594-1780350039594",
     "currency": "NGN"
   },
   "drivers": [
@@ -93,21 +93,20 @@
       "departureTime": "06:00",
       "arrivalTime": "06:20",
       "totalSeats": 14,
-      "availableSeats": 1,
+      "availableSeats": 2,
       "bookedSeats": [
         1,
         2,
         3,
         4,
         6,
-        7,
         8,
         9,
-        10,
         11,
         12,
         13,
-        14
+        14,
+        5
       ],
       "pricePerSeat": 500,
       "premiumPricePerSeat": 800,
@@ -161,7 +160,7 @@
       "departureTime": "07:30",
       "arrivalTime": "07:50",
       "totalSeats": 14,
-      "availableSeats": 6,
+      "availableSeats": 4,
       "bookedSeats": [
         1,
         2,
@@ -170,7 +169,9 @@
         6,
         8,
         9,
-        11
+        11,
+        7,
+        10
       ],
       "pricePerSeat": 700,
       "premiumPricePerSeat": 1000,
@@ -190,39 +191,32 @@
   ],
   "transactions": [
     {
-      "id": "t_1780053041247",
-      "amount": 120,
-      "type": "debit",
-      "description": "Deducted from wallet",
-      "createdAt": "2026-05-29T11:10:41.247Z"
-    },
-    {
-      "id": "t_1780053041208",
-      "amount": 120,
-      "type": "debit",
-      "description": "Deducted from wallet",
-      "createdAt": "2026-05-29T11:10:41.208Z"
-    },
-    {
-      "id": "t1",
-      "amount": 500,
-      "type": "debit",
-      "description": "Shuttle — Giri ⇄ Gwagwalada",
-      "createdAt": "2026-05-29T09:09:16.237Z"
-    },
-    {
-      "id": "t2",
+      "id": "t_1780435987929",
       "amount": 150,
       "type": "debit",
       "description": "Call Pack — 10 min",
-      "createdAt": "2026-05-29T08:09:16.237Z"
+      "createdAt": "2026-06-02T21:33:07.929Z"
     },
     {
-      "id": "t3",
+      "id": "t_1780435987874",
+      "amount": 150,
+      "type": "debit",
+      "description": "Deducted from wallet",
+      "createdAt": "2026-06-02T21:33:07.874Z"
+    },
+    {
+      "id": "t_1780435978088",
+      "amount": 500,
+      "type": "debit",
+      "description": "Shuttle 1001 — Giri → Gwagwalada (Seats: 5)",
+      "createdAt": "2026-06-02T21:32:58.088Z"
+    },
+    {
+      "id": "t_1780350039594",
       "amount": 15000,
       "type": "credit",
-      "description": "Monnify Sandbox Preload",
-      "createdAt": "2026-05-28T10:09:16.237Z"
+      "description": "Welcome Bonus Top-up",
+      "createdAt": "2026-06-01T21:40:39.594Z"
     }
   ],
   "bookings": [
@@ -242,12 +236,131 @@
         "isFavorite": false
       },
       "totalAmount": 120,
-      "status": "confirmed",
+      "status": "expired",
       "createdAt": "2026-05-29T11:10:41.248Z",
       "expiresAt": "2026-05-29T12:10:41.248Z",
       "ticketId": "TKT-R4H2X6N2",
       "qrCode": "",
       "driverId": "d_kk1"
+    },
+    {
+      "id": "book_1780248916386",
+      "type": "shuttle",
+      "route": "Giri → Gwagwalada",
+      "driver": {
+        "id": "d1",
+        "name": "Mustapha Yusuf",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-123-XY",
+        "systemCode": "1001",
+        "rating": 4.8,
+        "isActive": true,
+        "isFavorite": false
+      },
+      "seats": [
+        5
+      ],
+      "seatNumbers": [
+        5
+      ],
+      "totalAmount": 500,
+      "status": "expired",
+      "createdAt": "2026-05-31T17:35:16.386Z",
+      "expiresAt": "2026-05-31T18:35:16.386Z",
+      "ticketId": "TKT-3Q5JPCXL",
+      "qrCode": "",
+      "driverId": "d1",
+      "departureTime": "06:00"
+    },
+    {
+      "id": "book_1780248981653",
+      "type": "shuttle",
+      "route": "Gwagwalada → Giri",
+      "driver": {
+        "id": "d2",
+        "name": "Amina Bello",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "RVS-5678",
+        "systemCode": "DRV002",
+        "rating": 4.6,
+        "isActive": true,
+        "isFavorite": false
+      },
+      "seats": [
+        7
+      ],
+      "seatNumbers": [
+        7
+      ],
+      "totalAmount": 500,
+      "status": "expired",
+      "createdAt": "2026-05-31T17:36:21.653Z",
+      "expiresAt": "2026-05-31T18:36:21.653Z",
+      "ticketId": "TKT-I1MWZB14",
+      "qrCode": "",
+      "departureTime": "07:30"
+    },
+    {
+      "id": "book_1780249108247",
+      "type": "shuttle",
+      "route": "Gwagwalada → Giri",
+      "driver": {
+        "id": "d2",
+        "name": "Amina Bello",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "RVS-5678",
+        "systemCode": "DRV002",
+        "rating": 4.6,
+        "isActive": true,
+        "isFavorite": false
+      },
+      "seats": [
+        10
+      ],
+      "seatNumbers": [
+        10
+      ],
+      "totalAmount": 700,
+      "status": "expired",
+      "createdAt": "2026-05-31T17:38:28.247Z",
+      "expiresAt": "2026-05-31T18:38:28.247Z",
+      "ticketId": "TKT-UFPHOGHJ",
+      "qrCode": "",
+      "driverId": "d2",
+      "departureTime": "07:30"
+    },
+    {
+      "id": "book_1780435978088",
+      "type": "shuttle",
+      "route": "Giri → Gwagwalada",
+      "driver": {
+        "id": "d1",
+        "name": "Mustapha Yusuf",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-123-XY",
+        "systemCode": "1001",
+        "rating": 4.8,
+        "isActive": true,
+        "isFavorite": false
+      },
+      "seats": [
+        5
+      ],
+      "seatNumbers": [
+        5
+      ],
+      "totalAmount": 500,
+      "status": "confirmed",
+      "createdAt": "2026-06-02T21:32:58.088Z",
+      "expiresAt": "2026-06-02T22:32:58.088Z",
+      "ticketId": "TKT-C3AXEMLV",
+      "qrCode": "",
+      "driverId": "d1",
+      "departureTime": "06:00"
     }
   ],
   "complaints": [],
@@ -298,30 +411,248 @@
       "canCall": true,
       "canRate": true,
       "isFavorited": false
+    },
+    {
+      "id": "book_1780248916386",
+      "bookingId": "book_1780248916386",
+      "type": "shuttle",
+      "driver": {
+        "id": "d1",
+        "name": "Mustapha Yusuf",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-123-XY",
+        "systemCode": "1001",
+        "rating": 4.8,
+        "isActive": true,
+        "isFavorite": false
+      },
+      "route": "Giri → Gwagwalada",
+      "date": "Today, Just now",
+      "price": 500,
+      "ticketId": "TKT-3Q5JPCXL",
+      "canCall": true,
+      "canRate": true,
+      "isFavorited": false
+    },
+    {
+      "id": "book_1780248981653",
+      "bookingId": "book_1780248981653",
+      "type": "shuttle",
+      "driver": {
+        "id": "d2",
+        "name": "Amina Bello",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "RVS-5678",
+        "systemCode": "DRV002",
+        "rating": 4.6,
+        "isActive": true,
+        "isFavorite": false
+      },
+      "route": "Gwagwalada → Giri",
+      "date": "Today, Just now",
+      "price": 500,
+      "ticketId": "TKT-I1MWZB14",
+      "canCall": true,
+      "canRate": true,
+      "isFavorited": false
+    },
+    {
+      "id": "book_1780249108247",
+      "bookingId": "book_1780249108247",
+      "type": "shuttle",
+      "driver": {
+        "id": "d2",
+        "name": "Amina Bello",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "RVS-5678",
+        "systemCode": "DRV002",
+        "rating": 4.6,
+        "isActive": true,
+        "isFavorite": false
+      },
+      "route": "Gwagwalada → Giri",
+      "date": "Today, Just now",
+      "price": 700,
+      "ticketId": "TKT-UFPHOGHJ",
+      "canCall": true,
+      "canRate": true,
+      "isFavorited": false
+    },
+    {
+      "id": "book_1780435978088",
+      "bookingId": "book_1780435978088",
+      "type": "shuttle",
+      "driver": {
+        "id": "d1",
+        "name": "Mustapha Yusuf",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-123-XY",
+        "systemCode": "1001",
+        "rating": 4.8,
+        "isActive": true,
+        "isFavorite": false
+      },
+      "route": "Giri → Gwagwalada",
+      "date": "Today, Just now",
+      "price": 500,
+      "ticketId": "TKT-C3AXEMLV",
+      "canCall": true,
+      "canRate": true,
+      "isFavorited": false
     }
   ],
   "lastRide": {
-    "id": "book_1780053041248",
-    "bookingId": "book_1780053041248",
-    "type": "keke",
+    "id": "book_1780435978088",
+    "bookingId": "book_1780435978088",
+    "type": "shuttle",
     "driver": {
-      "id": "d_kk1",
-      "name": "Ibrahim Bello",
+      "id": "d1",
+      "name": "Mustapha Yusuf",
       "photo": "",
-      "vehicleType": "keke",
-      "vehiclePlate": "KDS-789-QA",
-      "systemCode": "2002",
-      "rating": 4.9,
+      "vehicleType": "shuttle",
+      "vehiclePlate": "ABJ-123-XY",
+      "systemCode": "1001",
+      "rating": 4.8,
       "isActive": true,
       "isFavorite": false
     },
-    "route": "Giri ⇄ Gwagwalada",
+    "route": "Giri → Gwagwalada",
     "date": "Today, Just now",
-    "price": 120,
-    "ticketId": "TKT-R4H2X6N2",
+    "price": 500,
+    "ticketId": "TKT-C3AXEMLV",
     "canCall": true,
     "canRate": true,
     "isFavorited": false
   },
-  "processedPayments": []
+  "processedPayments": [],
+  "users": [
+    {
+      "id": "usr_os1",
+      "name": "Oluwafemi Sheriff",
+      "email": "femi@raven.app",
+      "walletBalance": 13060,
+      "avatar": "",
+      "callMinutes": 8,
+      "passwordHash": "password123"
+    },
+    {
+      "id": "usr_1780350039594",
+      "name": "Nabil Abubakar",
+      "email": "nabil_1780350039584@raven.app",
+      "walletBalance": 14200,
+      "callMinutes": 20,
+      "avatar": "",
+      "passwordHash": "mypassword123"
+    }
+  ],
+  "userWallets": {
+    "usr_os1": {
+      "balance": 13060,
+      "accountNumber": "8823490123",
+      "bankName": "Wema Bank (Simulated Sandbox)",
+      "accountReference": "REF-SIM-usr_os1-1780049356237",
+      "currency": "NGN"
+    },
+    "usr_1780350039594": {
+      "balance": 14200,
+      "accountNumber": "8859500795",
+      "bankName": "Wema Bank (Simulated Sandbox)",
+      "accountReference": "REF-SIM-usr_1780350039594-1780350039594",
+      "currency": "NGN"
+    }
+  },
+  "userTransactions": {
+    "usr_os1": [
+      {
+        "id": "t_1780249108247",
+        "amount": 700,
+        "type": "debit",
+        "description": "Shuttle Raven Shuttle-KQ07 — Gwagwalada → Giri (Seats: 10)",
+        "createdAt": "2026-05-31T17:38:28.247Z"
+      },
+      {
+        "id": "t_1780248981653",
+        "amount": 500,
+        "type": "debit",
+        "description": "Shuttle Raven Shuttle-KQ07 — Gwagwalada → Giri (Seats: 7)",
+        "createdAt": "2026-05-31T17:36:21.653Z"
+      },
+      {
+        "id": "t_1780248916386",
+        "amount": 500,
+        "type": "debit",
+        "description": "Shuttle 1001 — Giri → Gwagwalada (Seats: 5)",
+        "createdAt": "2026-05-31T17:35:16.386Z"
+      },
+      {
+        "id": "t_1780053041247",
+        "amount": 120,
+        "type": "debit",
+        "description": "Deducted from wallet",
+        "createdAt": "2026-05-29T11:10:41.247Z"
+      },
+      {
+        "id": "t_1780053041208",
+        "amount": 120,
+        "type": "debit",
+        "description": "Deducted from wallet",
+        "createdAt": "2026-05-29T11:10:41.208Z"
+      },
+      {
+        "id": "t1",
+        "amount": 500,
+        "type": "debit",
+        "description": "Shuttle — Giri ⇄ Gwagwalada",
+        "createdAt": "2026-05-29T09:09:16.237Z"
+      },
+      {
+        "id": "t2",
+        "amount": 150,
+        "type": "debit",
+        "description": "Call Pack — 10 min",
+        "createdAt": "2026-05-29T08:09:16.237Z"
+      },
+      {
+        "id": "t3",
+        "amount": 15000,
+        "type": "credit",
+        "description": "Monnify Sandbox Preload",
+        "createdAt": "2026-05-28T10:09:16.237Z"
+      }
+    ],
+    "usr_1780350039594": [
+      {
+        "id": "t_1780435987929",
+        "amount": 150,
+        "type": "debit",
+        "description": "Call Pack — 10 min",
+        "createdAt": "2026-06-02T21:33:07.929Z"
+      },
+      {
+        "id": "t_1780435987874",
+        "amount": 150,
+        "type": "debit",
+        "description": "Deducted from wallet",
+        "createdAt": "2026-06-02T21:33:07.874Z"
+      },
+      {
+        "id": "t_1780435978088",
+        "amount": 500,
+        "type": "debit",
+        "description": "Shuttle 1001 — Giri → Gwagwalada (Seats: 5)",
+        "createdAt": "2026-06-02T21:32:58.088Z"
+      },
+      {
+        "id": "t_1780350039594",
+        "amount": 15000,
+        "type": "credit",
+        "description": "Welcome Bonus Top-up",
+        "createdAt": "2026-06-01T21:40:39.594Z"
+      }
+    ]
+  }
 }

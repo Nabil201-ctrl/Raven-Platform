@@ -33,86 +33,24 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
     currency: 'NGN',
   };
 
-  public drivers: Driver[] = [
-    { id: 'd1', name: 'Mustapha Yusuf', photo: '', vehicleType: 'shuttle', vehiclePlate: 'ABJ-123-XY', systemCode: '1001', rating: 4.8, isActive: true, isFavorite: false },
-    { id: 'd2', name: 'Amina Bello', photo: '', vehicleType: 'shuttle', vehiclePlate: 'RVS-5678', systemCode: 'DRV002', rating: 4.6, isActive: true, isFavorite: false },
-    { id: 'd3', name: 'John Adeyemi', photo: '', vehicleType: 'shuttle', vehiclePlate: 'RVS-9012', systemCode: 'DRV003', rating: 4.9, isActive: true, isFavorite: false },
-    { id: 'd4', name: 'Grace Okafor', photo: '', vehicleType: 'shuttle', vehiclePlate: 'RVS-3344', systemCode: 'DRV004', rating: 4.9, isActive: true, isFavorite: false },
-    { id: 'd5', name: 'Ibrahim Yakubu', photo: '', vehicleType: 'shuttle', vehiclePlate: 'RVS-7788', systemCode: 'DRV005', rating: 4.7, isActive: false, isFavorite: false },
-    { id: 'd_kk1', name: 'Ibrahim Bello', photo: '', vehicleType: 'keke', vehiclePlate: 'KDS-789-QA', systemCode: '2002', rating: 4.9, isActive: true, isFavorite: false },
-  ];
+  public drivers: Driver[] = [];
 
-  public shuttles: Shuttle[] = [
-    {
-      id: 'sh_1001',
-      shuttleCode: '1001',
-      route: { from: 'Giri', to: 'Gwagwalada' },
-      departureTime: '06:00',
-      arrivalTime: '06:20',
-      totalSeats: 14,
-      availableSeats: 10,
-      bookedSeats: [1, 3, 9, 14],
-      pricePerSeat: 500,
-      premiumPricePerSeat: 800,
-      status: 'available',
-      driver: this.drivers[0],
-    },
-    {
-      id: 'sh_IE23',
-      shuttleCode: 'Raven Shuttle-IE23',
-      route: { from: 'Giri', to: 'Gwagwalada' },
-      departureTime: '06:00',
-      arrivalTime: '06:20',
-      totalSeats: 19,
-      availableSeats: 19,
-      bookedSeats: [],
-      pricePerSeat: 700,
-      premiumPricePerSeat: 1000,
-      status: 'available',
-      driver: this.drivers[0],
-    },
-    {
-      id: 'sh_KQ07',
-      shuttleCode: 'Raven Shuttle-KQ07',
-      route: { from: 'Gwagwalada', to: 'Giri' },
-      departureTime: '07:30',
-      arrivalTime: '07:50',
-      totalSeats: 14,
-      availableSeats: 6,
-      bookedSeats: [1, 2, 4, 5, 6, 8, 9, 11],
-      pricePerSeat: 700,
-      premiumPricePerSeat: 1000,
-      status: 'available',
-      driver: this.drivers[1],
-    },
-  ];
+  public shuttles: Shuttle[] = [];
 
-  public transactions: Transaction[] = [
-    { id: 't1', amount: 500, type: 'debit', description: 'Shuttle — Giri ⇄ Gwagwalada', createdAt: new Date(Date.now() - 3600000).toISOString() },
-    { id: 't2', amount: 150, type: 'debit', description: 'Call Pack — 10 min', createdAt: new Date(Date.now() - 7200000).toISOString() },
-    { id: 't3', amount: 15000, type: 'credit', description: 'Monnify Sandbox Preload', createdAt: new Date(Date.now() - 86400000).toISOString() },
-  ];
+  public transactions: Transaction[] = [];
 
   public bookings: Booking[] = [];
   public complaints: Complaint[] = [];
   public reverseTrips: any[] = [];
 
-  public lastRide: RideHistoryEntry | null = {
-    id: 'ride_last1',
-    bookingId: 'book_123',
-    type: 'keke',
-    driver: this.drivers[5],
-    route: 'Gate 1 ⇄ Faculty of Engineering',
-    date: 'Today, 5:15 PM',
-    price: 300,
-    ticketId: 'TKT-F4C00268',
-    canCall: true,
-    canRate: true,
-    isFavorited: false,
-  };
-
-  public rideHistory: RideHistoryEntry[] = [this.lastRide as RideHistoryEntry];
+  public lastRide: RideHistoryEntry | null = null;
+  public rideHistory: RideHistoryEntry[] = [];
   public processedPayments = new Set<string>();
+
+  // Multi-user support
+  public users: (User & { passwordHash?: string })[] = [];
+  public userWallets: Record<string, WalletDetails> = {};
+  public userTransactions: Record<string, Transaction[]> = {};
 
   onModuleInit() {
     this.loadFromDisk();
@@ -130,6 +68,21 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
 
   public saveToDisk() {
     try {
+      // Automatically synchronize current user's state back into multi-user storage
+      if (this.currentUser && this.currentUser.id) {
+        const uId = this.currentUser.id;
+        const userIdx = this.users.findIndex(u => u.id === uId);
+        if (userIdx !== -1) {
+          this.users[userIdx] = {
+            ...this.users[userIdx],
+            ...this.currentUser,
+            walletBalance: this.walletDetails.balance,
+          };
+        }
+        this.userWallets[uId] = { ...this.walletDetails };
+        this.userTransactions[uId] = [...this.transactions];
+      }
+
       const data = {
         currentUser: this.currentUser,
         walletDetails: this.walletDetails,
@@ -142,6 +95,9 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
         rideHistory: this.rideHistory,
         lastRide: this.lastRide,
         processedPayments: Array.from(this.processedPayments),
+        users: this.users,
+        userWallets: this.userWallets,
+        userTransactions: this.userTransactions,
       };
       const dir = path.dirname(this.DB_FILE);
       if (!fs.existsSync(dir)) {
@@ -169,9 +125,47 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
         if (data.rideHistory) this.rideHistory = data.rideHistory;
         if (data.lastRide) this.lastRide = data.lastRide;
         if (data.processedPayments) this.processedPayments = new Set(data.processedPayments);
+        
+        // Load or seed multi-user details
+        this.users = data.users || [
+          {
+            id: 'usr_os1',
+            name: 'Oluwafemi Sheriff',
+            email: 'femi@raven.app',
+            walletBalance: 15000,
+            avatar: '',
+            callMinutes: 10,
+            passwordHash: 'password123',
+          }
+        ];
+        this.userWallets = data.userWallets || {
+          'usr_os1': { ...this.walletDetails }
+        };
+        this.userTransactions = data.userTransactions || {
+          'usr_os1': [...this.transactions]
+        };
+        
         console.log('[DB Persistence] Loaded persistent JSON database successfully');
       } else {
         console.log('[DB Persistence] No database found. Seeding initial data...');
+        // Seed default multi-user variables
+        this.users = [
+          {
+            id: 'usr_os1',
+            name: 'Oluwafemi Sheriff',
+            email: 'femi@raven.app',
+            walletBalance: 15000,
+            avatar: '',
+            callMinutes: 10,
+            passwordHash: 'password123',
+          }
+        ];
+        this.userWallets = {
+          'usr_os1': { ...this.walletDetails }
+        };
+        this.userTransactions = {
+          'usr_os1': []
+        };
         this.saveToDisk();
       }
     } catch (e: any) {

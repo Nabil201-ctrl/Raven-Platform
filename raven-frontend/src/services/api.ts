@@ -22,6 +22,20 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   /* ── Auth / User ───────────────────────────────────── */
+  async login(email: string, password: string): Promise<User> {
+    return request<User>('/user/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  },
+
+  async register(name: string, email: string, password: string): Promise<User> {
+    return request<User>('/user/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password }),
+    });
+  },
+
   async getCurrentUser(): Promise<User> {
     return request<User>('/user');
   },
@@ -32,7 +46,8 @@ export const api = {
   },
 
   async getTransactions(): Promise<Transaction[]> {
-    return request<Transaction[]>('/user/transactions');
+    const res = await request<{ data: Transaction[] }>('/user/transactions');
+    return res.data;
   },
 
   async deductFromWallet(amount: number): Promise<User> {

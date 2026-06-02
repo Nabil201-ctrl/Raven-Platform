@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { useAppContext } from '../context/AppContext';
 import type { Shuttle } from '../types';
 import { ArrowLeftIcon, CrownIcon, MapPinIcon, ClockIcon, StarIcon } from '../icons';
 import { io, Socket } from 'socket.io-client';
@@ -8,6 +9,7 @@ import { io, Socket } from 'socket.io-client';
 export const ShuttleBooking: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAppContext();
   const [shuttle, setShuttle] = useState<Shuttle | null>(null);
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
   const [isPremiumMode, setIsPremiumMode] = useState(false);
@@ -27,7 +29,9 @@ export const ShuttleBooking: React.FC = () => {
       .finally(() => setLoading(false));
 
     // Connect to WebSocket namespace 'booking'
-    const socket = io('http://localhost:5000/booking');
+    const socket = io('http://localhost:5000/booking', {
+      query: { userId: user?.id || 'anonymous' }
+    });
     socketRef.current = socket;
 
     // Join room for this specific shuttle
@@ -74,7 +78,7 @@ export const ShuttleBooking: React.FC = () => {
       socket.emit('room:leave', { roomId: `shuttle_${id}` });
       socket.disconnect();
     };
-  }, [id]);
+  }, [id, user?.id]);
 
   if (loading || !shuttle) {
     return (

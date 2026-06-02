@@ -1,10 +1,21 @@
 import { Controller, Get, Post, Body, Query, DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
 import { UserService } from './user.service';
 import { WalletAmountDto, PurchaseMinutesDto } from '../common/dto/wallet.dto';
+import { LoginDto, RegisterDto } from '../common/dto/auth.dto';
 
 @Controller('api/user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Post('login')
+  login(@Body() body: LoginDto) {
+    return this.userService.login(body.email, body.password);
+  }
+
+  @Post('register')
+  register(@Body() body: RegisterDto) {
+    return this.userService.register(body.name, body.email, body.password);
+  }
 
   @Get()
   getCurrentUser() {

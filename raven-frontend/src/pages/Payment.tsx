@@ -9,7 +9,7 @@ import { ArrowLeftIcon, WalletIcon } from '../icons';
 export const Payment: React.FC = () => {
   const location    = useLocation();
   const navigate    = useNavigate();
-  const { balance, deductFunds } = useWallet();
+  const { balance } = useWallet();
   const { syncState } = useAppContext();
   const paymentData = location.state as PaymentState | null;
 
@@ -45,8 +45,7 @@ export const Payment: React.FC = () => {
       const routeLabel = paymentData.route ||
         (isShuttle ? 'Shuttle ride' : `Keke — ${paymentData.driverName || 'Driver'}`);
 
-      // Deduct with meaningful transaction description
-      await deductFunds(selectedAmount, routeLabel);
+      // Booking creation will handle wallet deduction automatically on the backend
 
       // Create booking record
       const booking = await api.createBooking({

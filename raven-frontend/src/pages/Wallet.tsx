@@ -10,8 +10,8 @@ export const Wallet: React.FC = () => {
   const [copiedTxId, setCopiedTxId] = useState(false);
 
   const bankDetails = {
-    bank: 'Wema Bank (Simulated Sandbox)',
-    accountNumber: '8823490123',
+    bank: user?.bankName || 'Wema Bank (Simulated Sandbox)',
+    accountNumber: user?.accountNumber || '8823490123',
     accountName: user?.name || 'Oluwafemi Sheriff',
   };
 

@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsOptional, Min, Max, IsNotEmpty } from 'class-validator';
+import { IsNumber, IsString, IsOptional, Min, Max, IsNotEmpty, IsBoolean } from 'class-validator';
 
 export class WalletAmountDto {
   @IsNumber()
@@ -60,6 +60,7 @@ export class RateDriverDto {
 }
 
 export class FavoriteDriverDto {
+  @IsBoolean()
   isFavorite!: boolean;
 }
 

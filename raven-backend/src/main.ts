@@ -75,16 +75,16 @@ async function bootstrap() {
   if (!process.env.AT_USERNAME) warnings.push('AT_USERNAME (Africa\'s Talking)');
 
   logger.log(`=============================================================`);
-  logger.log(`🚀 Raven Backend is running on port ${port}`);
-  logger.log(`🛡️  Security Headers (Helmet): ENABLED`);
-  logger.log(`📦 Payload Compression (Gzip): ENABLED`);
-  logger.log(`✅ Input Validation (ValidationPipe): ENABLED`);
-  logger.log(`🚨 Exception Filter: ENABLED`);
-  logger.log(`📝 Request Logging: ENABLED`);
-  logger.log(`🔌 Trusted Proxies: ENABLED`);
-  logger.log(`♻️  Graceful Shutdown Hooks: ENABLED`);
+  logger.log(` Raven Backend is running on port ${port}`);
+  logger.log(`  Security Headers (Helmet): ENABLED`);
+  logger.log(` Payload Compression (Gzip): ENABLED`);
+  logger.log(` Input Validation (ValidationPipe): ENABLED`);
+  logger.log(` Exception Filter: ENABLED`);
+  logger.log(` Request Logging: ENABLED`);
+  logger.log(` Trusted Proxies: ENABLED`);
+  logger.log(`  Graceful Shutdown Hooks: ENABLED`);
   if (warnings.length > 0) {
-    logger.warn(`⚠️  Missing env vars (sandbox mode): ${warnings.join(', ')}`);
+    logger.warn(`  Missing env vars (sandbox mode): ${warnings.join(', ')}`);
   }
   logger.log(`=============================================================`);
 }

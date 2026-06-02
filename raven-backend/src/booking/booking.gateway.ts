@@ -44,10 +44,10 @@ export class BookingGateway implements OnGatewayConnection, OnGatewayDisconnect,
     // WebSocket authentication: validate userId from handshake query
     const userId = client.handshake.query.userId as string;
     if (!userId) {
-      this.logger.warn(`🚫 Client ${client.id} connected without userId — allowing anonymous (sandbox mode)`);
+      this.logger.warn(` Client ${client.id} connected without userId — allowing anonymous (sandbox mode)`);
     } else {
       (client as any).userId = userId;
-      this.logger.log(`🔌 Client connected: ${client.id} (User: ${userId})`);
+      this.logger.log(` Client connected: ${client.id} (User: ${userId})`);
     }
     
     // Send immediate initial sync of available shuttles and active reverse trips to new client
@@ -58,7 +58,7 @@ export class BookingGateway implements OnGatewayConnection, OnGatewayDisconnect,
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.log(`❌ Client disconnected: ${client.id}`);
+    this.logger.log(` Client disconnected: ${client.id}`);
     this.unlockAllSeatsForUser(client.id);
   }
 
@@ -68,7 +68,7 @@ export class BookingGateway implements OnGatewayConnection, OnGatewayDisconnect,
     @MessageBody() data: { roomId: string },
   ) {
     client.join(data.roomId);
-    this.logger.log(`👥 Client ${client.id} joined room: ${data.roomId}`);
+    this.logger.log(` Client ${client.id} joined room: ${data.roomId}`);
     
     // If the room is for a shuttle (e.g., 'shuttle_sh_1001'), send active seat locks for that shuttle
     if (data.roomId.startsWith('shuttle_')) {
@@ -84,7 +84,7 @@ export class BookingGateway implements OnGatewayConnection, OnGatewayDisconnect,
     @MessageBody() data: { roomId: string },
   ) {
     client.leave(data.roomId);
-    this.logger.log(`🚪 Client ${client.id} left room: ${data.roomId}`);
+    this.logger.log(` Client ${client.id} left room: ${data.roomId}`);
   }
 
   @SubscribeMessage('seat:lock')
@@ -115,7 +115,7 @@ export class BookingGateway implements OnGatewayConnection, OnGatewayDisconnect,
     const expiresAt = Date.now() + 2 * 60 * 1000;
     shuttleLocks.set(seatNumber, { userId, expiresAt });
 
-    this.logger.log(`🔒 Seat ${seatNumber} locked on Shuttle ${shuttleId} by User ${userId}`);
+    this.logger.log(` Seat ${seatNumber} locked on Shuttle ${shuttleId} by User ${userId}`);
 
     // Broadcast lock update to all users in the specific shuttle room
     this.server.to(`shuttle_${shuttleId}`).emit('seat:locked', {
@@ -142,7 +142,7 @@ export class BookingGateway implements OnGatewayConnection, OnGatewayDisconnect,
       const lock = shuttleLocks.get(seatNumber);
       if (lock && lock.userId === userId) {
         shuttleLocks.delete(seatNumber);
-        this.logger.log(`🔓 Seat ${seatNumber} unlocked on Shuttle ${shuttleId} by User ${userId}`);
+        this.logger.log(` Seat ${seatNumber} unlocked on Shuttle ${shuttleId} by User ${userId}`);
         
         // Broadcast unlock to all users in the shuttle room
         this.server.to(`shuttle_${shuttleId}`).emit('seat:unlocked', {
@@ -159,7 +159,7 @@ export class BookingGateway implements OnGatewayConnection, OnGatewayDisconnect,
     @MessageBody() data: { driverId: string; latitude: number; longitude: number; speed?: number },
   ) {
     // Broadcast live driver GPS coordinates to all clients tracking that driver
-    this.logger.debug(`📡 Telemetry from Driver ${data.driverId}: ${data.latitude}, ${data.longitude}`);
+    this.logger.debug(` Telemetry from Driver ${data.driverId}: ${data.latitude}, ${data.longitude}`);
     this.server.to(`driver_${data.driverId}`).emit('driver:telemetry', data);
     // Also broadcast to a general tracking channel
     this.server.to('tracking:live').emit('driver:telemetry', data);
@@ -169,7 +169,7 @@ export class BookingGateway implements OnGatewayConnection, OnGatewayDisconnect,
   
   // Call this when a new booking is finalized to sync seat layout updates instantly
   broadcastShuttleUpdate(shuttleId: string, shuttle: any) {
-    this.logger.log(`📢 Broadcasting live seat layout update for Shuttle ${shuttleId}`);
+    this.logger.log(` Broadcasting live seat layout update for Shuttle ${shuttleId}`);
     // Update general lists
     this.server.emit('shuttle:updated', shuttle);
     // Update details in shuttle room
@@ -189,7 +189,7 @@ export class BookingGateway implements OnGatewayConnection, OnGatewayDisconnect,
 
   // Call this when an inbound reverse trip is auto-generated
   broadcastReverseTripAlert(reverseTrip: any) {
-    this.logger.log(`🚨 Broadcasting Inbound Reverse Trip Alert: ${reverseTrip.vehicleCode}`);
+    this.logger.log(` Broadcasting Inbound Reverse Trip Alert: ${reverseTrip.vehicleCode}`);
     this.server.emit('transit:reverse-trip:added', reverseTrip);
   }
 
@@ -227,7 +227,7 @@ export class BookingGateway implements OnGatewayConnection, OnGatewayDisconnect,
       for (const [seatNumber, lock] of shuttleLocks.entries()) {
         if (lock.expiresAt <= now) {
           shuttleLocks.delete(seatNumber);
-          this.logger.log(`⏳ Lock expired on Seat ${seatNumber} of Shuttle ${shuttleId}`);
+          this.logger.log(` Lock expired on Seat ${seatNumber} of Shuttle ${shuttleId}`);
           this.server.to(`shuttle_${shuttleId}`).emit('seat:unlocked', {
             shuttleId,
             seatNumber,

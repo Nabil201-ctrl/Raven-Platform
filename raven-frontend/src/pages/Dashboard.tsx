@@ -371,14 +371,15 @@ export const Dashboard: React.FC = () => {
           </p>
           <div className="flex items-center gap-2 mt-2 px-3 py-1.5 rounded-xl text-[11px] font-semibold tracking-wide w-fit"
                style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)' }}>
-            <span style={{ color: 'var(--accent-blue)' }}>WEMA BANK</span>
+            <span style={{ color: 'var(--accent-blue)' }}>{(user?.bankName || 'Wema Bank').toUpperCase()}</span>
             <span style={{ color: 'var(--text-muted)' }}>·</span>
             <span className="font-mono cursor-pointer" style={{ color: 'var(--text-primary)' }}
                   onClick={() => {
-                    navigator.clipboard.writeText("8823490123");
-                    alert("Virtual account number copied: 8823490123");
+                    const accNum = user?.accountNumber || "8823490123";
+                    navigator.clipboard.writeText(accNum);
+                    alert(`Virtual account number copied: ${accNum}`);
                   }}>
-              8823490123 (Copy Account)
+              {user?.accountNumber || '8823490123'} (Copy Account)
             </span>
           </div>
         </div>
@@ -402,6 +403,55 @@ export const Dashboard: React.FC = () => {
             <span>Top up Funds</span>
             <ArrowRightIcon size={10} />
           </div>
+        </button>
+      </div>
+
+      {/* ── Quick Action Hub ── */}
+      <div className="grid grid-cols-4 gap-3">
+        <button
+          onClick={() => {
+            const el = document.getElementById('available-shuttles-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+        >
+          <span className="text-xl mb-1.5">🚐</span>
+          <span className="text-[10px] font-bold tracking-wide" style={{ color: 'var(--text-primary)' }}>Shuttle</span>
+        </button>
+
+        <button
+          onClick={() => {
+            const el = document.getElementById('onsite-booking-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => {
+              const input = document.getElementById('vehicle-code-input');
+              if (input) (input as HTMLInputElement).focus();
+            }, 300);
+          }}
+          className="flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+        >
+          <span className="text-xl mb-1.5">🛺</span>
+          <span className="text-[10px] font-bold tracking-wide" style={{ color: 'var(--text-primary)' }}>Keke</span>
+        </button>
+
+        <button
+          onClick={() => navigate('/wallet')}
+          className="flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+        >
+          <span className="text-xl mb-1.5">💳</span>
+          <span className="text-[10px] font-bold tracking-wide" style={{ color: 'var(--text-primary)' }}>Top-Up</span>
+        </button>
+
+        <button
+          onClick={() => navigate('/calls')}
+          className="flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+        >
+          <span className="text-xl mb-1.5">📞</span>
+          <span className="text-[10px] font-bold tracking-wide" style={{ color: 'var(--text-primary)' }}>Calls</span>
         </button>
       </div>
 
@@ -432,7 +482,7 @@ export const Dashboard: React.FC = () => {
       )}
 
       {/* ── On-site Booking ── */}
-      <section className="animate-fade-up-1">
+      <section id="onsite-booking-section" className="animate-fade-up-1">
         <SectionHeader label="ON-SITE BOOKING" />
         <div className="rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <div className="flex items-center gap-1.5 mb-3">
@@ -444,6 +494,7 @@ export const Dashboard: React.FC = () => {
               style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)' }}>
               <SearchIcon size={14} style={{ color: 'var(--text-muted)' } as React.CSSProperties} />
               <input
+                id="vehicle-code-input"
                 type="text"
                 placeholder="4–5 digit code on vehicle"
                 value={searchCode}
@@ -510,7 +561,7 @@ export const Dashboard: React.FC = () => {
       </section>
 
       {/* ── Available shuttles ── */}
-      <section className="animate-fade-up-2">
+      <section id="available-shuttles-section" className="animate-fade-up-2">
         <SectionHeader
           label="AVAILABLE SHUTTLES"
           onViewAll={() => setViewAllSheet('available')}

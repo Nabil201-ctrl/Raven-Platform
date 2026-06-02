@@ -105,7 +105,7 @@ const LogOutIcon: React.FC<{ size?: number; style?: React.CSSProperties }> = ({ 
 /* ── Main component ──────────────────────────────────── */
 export const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const { user, balance, callMinutes, theme, toggleTheme } = useAppContext();
+  const { user, balance, callMinutes, theme, toggleTheme, logout } = useAppContext();
 
   const [notifications, setNotifications] = useState(true);
 
@@ -279,7 +279,10 @@ export const Profile: React.FC = () => {
           label="Sign Out"
           danger
           onClick={() => {
-            if (confirm('Sign out of Raven?')) navigate('/');
+            if (confirm('Sign out of Raven?')) {
+              logout();
+              navigate('/login');
+            }
           }}
           right={<LogOutIcon size={15} style={{ color: '#ef4444' } as React.CSSProperties} />}
         />
