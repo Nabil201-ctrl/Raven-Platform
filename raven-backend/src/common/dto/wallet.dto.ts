@@ -75,3 +75,17 @@ export class ResetSeatsDto {
   @IsNotEmpty()
   code!: string;
 }
+
+export class RegisterDriverDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  vehicleType!: 'shuttle' | 'keke' | 'bike';
+
+  @IsString()
+  @IsNotEmpty()
+  vehiclePlate!: string;
+}

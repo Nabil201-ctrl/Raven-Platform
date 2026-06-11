@@ -1,10 +1,33 @@
-import { Controller, Get, Post, Body, Param, Res, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Res, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { DriverService } from './driver.service';
-import { RateDriverDto, FavoriteDriverDto } from '../common/dto/wallet.dto';
+import { RateDriverDto, FavoriteDriverDto, RegisterDriverDto } from '../common/dto/wallet.dto';
+import { AdminGuard } from '../common/guards/auth.guard';
 
 @Controller('api')
 export class DriverController {
   constructor(private readonly driverService: DriverService) {}
+
+  @Get('drivers')
+  getAllDrivers() {
+    return this.driverService.getAllDrivers();
+  }
+
+  @Post('drivers/register')
+  registerDriver(@Body() body: RegisterDriverDto) {
+    return this.driverService.registerDriver(body.name, body.vehicleType, body.vehiclePlate);
+  }
+
+  @Post('drivers/:id/verify')
+  @UseGuards(AdminGuard)
+  verifyDriver(@Param('id') id: string) {
+    return this.driverService.verifyDriver(id);
+  }
+
+  @Post('drivers/:id/approve')
+  @UseGuards(AdminGuard)
+  approveDriver(@Param('id') id: string) {
+    return this.driverService.approveDriver(id);
+  }
 
   @Get('drivers/verify/:code')
   verifyDriverCode(@Param('code') code: string) {

@@ -20,6 +20,8 @@ export interface Driver {
   rating: number;
   isActive: boolean;
   isFavorite?: boolean;
+  isVerified?: boolean;
+  isApproved?: boolean;
 }
 
 export interface Shuttle {

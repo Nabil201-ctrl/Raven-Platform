@@ -5,8 +5,10 @@ import type {
 const BASE_URL = 'http://localhost:5000/api';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const adminKey = localStorage.getItem('raven_admin_key') || '';
   const headers = {
     'Content-Type': 'application/json',
+    ...(adminKey ? { 'x-admin-key': adminKey } : {}),
     ...(options?.headers || {}),
   };
   const response = await fetch(`${BASE_URL}${path}`, {
@@ -132,6 +134,23 @@ export const api = {
     return request<Driver>(`/drivers/${driverId}`);
   },
 
+  async getDrivers(): Promise<Driver[]> {
+    return request<Driver[]>('/drivers');
+  },
+
+  async registerDriver(data: { name: string; vehicleType: 'shuttle' | 'keke' | 'bike'; vehiclePlate: string }): Promise<Driver> {
+    return request<Driver>('/drivers/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async verifyDriver(id: string): Promise<Driver> {
+    return request<Driver>(`/drivers/${id}/verify`, {
+      method: 'POST',
+    });
+  },
+
   /* ── Social / Interaction ───────────────────────────── */
   async toggleFavoriteDriver(driverId: string, isFavorite: boolean): Promise<void> {
     await request<void>(`/drivers/${driverId}/favorite`, {
@@ -144,6 +163,36 @@ export const api = {
     await request<void>('/complaints', {
       method: 'POST',
       body: JSON.stringify(complaint),
+    });
+  },
+
+  async getComplaints(page = 1, limit = 20): Promise<{ data: Complaint[]; total: number }> {
+    return request<{ data: Complaint[]; total: number }>(`/complaints?page=${page}&limit=${limit}`);
+  },
+
+  async resolveComplaint(id: string): Promise<void> {
+    await request<void>(`/complaints/${id}/resolve`, {
+      method: 'PATCH',
+    });
+  },
+
+  async createShuttle(data: any): Promise<Shuttle> {
+    return request<Shuttle>('/admin/shuttles', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateShuttle(id: string, data: any): Promise<Shuttle> {
+    return request<Shuttle>(`/admin/shuttles/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteShuttle(id: string): Promise<void> {
+    await request<void>(`/admin/shuttles/${id}`, {
+      method: 'DELETE',
     });
   },
 

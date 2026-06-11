@@ -13,23 +13,23 @@ export interface WalletDetails {
 
 @Injectable()
 export class DbService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger('DbService');
+  private readonly logger = new Logger('DbService'); 
   private readonly DB_FILE = path.join(__dirname, '..', '..', 'data', 'db.json');
 
   public currentUser: User = {
     id: 'usr_os1',
     name: 'Oluwafemi Sheriff',
     email: 'femi@raven.app',
-    walletBalance: 15000,
+    walletBalance: 0,
     avatar: '',
-    callMinutes: 10,
+    callMinutes: 0,
   };
 
   public walletDetails: WalletDetails = {
-    balance: 15000,
-    accountNumber: '8823490123',
-    bankName: 'Wema Bank (Simulated Sandbox)',
-    accountReference: `REF-SIM-usr_os1-${Date.now()}`,
+    balance: 0,
+    accountNumber: '',
+    bankName: '',
+    accountReference: '',
     currency: 'NGN',
   };
 
@@ -132,9 +132,9 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
             id: 'usr_os1',
             name: 'Oluwafemi Sheriff',
             email: 'femi@raven.app',
-            walletBalance: 15000,
+            walletBalance: 0,
             avatar: '',
-            callMinutes: 10,
+            callMinutes: 0,
             passwordHash: 'password123',
           }
         ];
@@ -154,9 +154,9 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
             id: 'usr_os1',
             name: 'Oluwafemi Sheriff',
             email: 'femi@raven.app',
-            walletBalance: 15000,
+            walletBalance: 0,
             avatar: '',
-            callMinutes: 10,
+            callMinutes: 0,
             passwordHash: 'password123',
           }
         ];

@@ -10,7 +10,8 @@ export class DriverService implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      const AfricasTalking = require('africastalking');
+      const ATLib = require('africastalking');
+      const AfricasTalking = ATLib.default || ATLib;
       const at = AfricasTalking({
         apiKey: (process.env.AT_API_KEY || 'sandbox').trim(),
         username: (process.env.AT_USERNAME || 'sandbox').trim(),
@@ -22,25 +23,59 @@ export class DriverService implements OnModuleInit {
     }
   }
 
+  registerDriver(name: string, vehicleType: 'shuttle' | 'keke' | 'bike', vehiclePlate: string): Driver {
+    let code = '';
+    do {
+      code = Math.floor(1000 + Math.random() * 9000).toString();
+    } while (this.db.drivers.some(d => d.systemCode === code));
+
+    const newDriver: Driver = {
+      id: `drv_${Date.now()}`,
+      name,
+      photo: '',
+      vehicleType,
+      vehiclePlate,
+      systemCode: code,
+      rating: 5.0,
+      isActive: false,
+      isVerified: false,
+      isApproved: false,
+      isFavorite: false,
+    };
+    this.db.drivers.push(newDriver);
+    this.db.saveToDisk();
+    return newDriver;
+  }
+
+  verifyDriver(id: string): Driver {
+    const found = this.db.drivers.find(d => d.id === id);
+    if (!found) {
+      throw new NotFoundException(`Driver with ID "${id}" not found`);
+    }
+    found.isVerified = true;
+    this.db.saveToDisk();
+    return found;
+  }
+
+  approveDriver(id: string): Driver {
+    const found = this.db.drivers.find(d => d.id === id);
+    if (!found) {
+      throw new NotFoundException(`Driver with ID "${id}" not found`);
+    }
+    found.isApproved = true;
+    this.db.saveToDisk();
+    return found;
+  }
+
+  getAllDrivers(): Driver[] {
+    return this.db.drivers;
+  }
+
   verifyDriverCode(code: string): Driver {
     const upper = code.toUpperCase();
     const found = this.db.drivers.find(d => d.systemCode === upper);
     if (!found) {
-      // Dynamic fallback for custom inputs
-      const tempDriver: Driver = {
-        id: `drv_${code.toLowerCase()}`,
-        name: 'Aliyu Bello',
-        photo: '',
-        vehicleType: 'keke',
-        vehiclePlate: `KJA-${upper}`,
-        systemCode: upper,
-        rating: 4.9,
-        isActive: true,
-        isFavorite: false,
-      };
-      this.db.drivers.push(tempDriver);
-      this.db.saveToDisk();
-      return tempDriver;
+      throw new NotFoundException(`Driver profile with system code "${code}" not found`);
     }
     return found;
   }
