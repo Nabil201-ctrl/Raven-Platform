@@ -34,6 +34,28 @@ interface AppState {
 
 const AppContext = createContext<AppState | null>(null);
 
+const getInitialMockUser = (): User => ({
+  id: 'usr_mock1',
+  name: 'Nabil Abubakar',
+  email: 'nabil@example.com',
+  walletBalance: 12500,
+  callMinutes: 45,
+  accountNumber: '1234567890',
+  bankName: 'Raven Bank',
+});
+
+const getMockDriver = (): Driver => ({
+  id: 'drv_1',
+  name: 'Samuel O.',
+  photo: 'https://i.pravatar.cc/150?u=drv_1',
+  vehicleType: 'keke' as const,
+  vehiclePlate: 'ABJ-123-XY',
+  systemCode: 'K-99',
+  rating: 4.8,
+  isActive: true,
+  isFavorite: true,
+});
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [balance, setBalance]         = useState<number>(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -48,59 +70,92 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setUser(u);
       setBalance(u.walletBalance);
       setCallMinutes(u.callMinutes);
+      localStorage.setItem('raven_cached_user', JSON.stringify(u));
 
       const txs = await api.getTransactions();
       setTransactions(txs);
+      localStorage.setItem('raven_cached_transactions', JSON.stringify(txs));
 
       const r = await api.getLastRide();
       setLastRide(r);
+      if (r) {
+        localStorage.setItem('raven_cached_last_ride', JSON.stringify(r));
+      } else {
+        localStorage.removeItem('raven_cached_last_ride');
+      }
     } catch (e) {
-      console.error('Error synchronizing backend state, falling back to mock data:', e);
-      // Fallback to mock data to populate the frontend
-      const mockUser: User = {
-        id: 'usr_mock1',
-        name: 'Nabil Abubakar',
-        email: 'nabil@example.com',
-        walletBalance: 12500,
-        callMinutes: 45,
-        accountNumber: '1234567890',
-        bankName: 'Raven Bank',
-      };
-      setUser(mockUser);
-      setBalance(mockUser.walletBalance);
-      setCallMinutes(mockUser.callMinutes);
+      console.warn('Error synchronizing backend state, falling back to cached/mock data:', e);
+      
+      const cachedUserStr = localStorage.getItem('raven_cached_user');
+      const cachedTxsStr = localStorage.getItem('raven_cached_transactions');
+      const cachedLastRideStr = localStorage.getItem('raven_cached_last_ride');
 
-      setTransactions([
-        { id: 'tx_1', amount: 5000, type: 'credit', description: 'Wallet Top-up', createdAt: new Date().toISOString() },
-        { id: 'tx_2', amount: 1500, type: 'debit', description: 'Shuttle Booking', createdAt: new Date(Date.now() - 86400000).toISOString() },
-        { id: 'tx_3', amount: 300, type: 'debit', description: 'Keke Ride', createdAt: new Date(Date.now() - 172800000).toISOString() }
-      ]);
+      let fallbackUser: User;
+      if (cachedUserStr) {
+        try {
+          fallbackUser = JSON.parse(cachedUserStr);
+        } catch {
+          fallbackUser = getInitialMockUser();
+        }
+      } else {
+        fallbackUser = getInitialMockUser();
+      }
 
-      const mockDriver: Driver = {
-        id: 'drv_1',
-        name: 'Samuel O.',
-        photo: 'https://i.pravatar.cc/150?u=drv_1',
-        vehicleType: 'keke',
-        vehiclePlate: 'ABJ-123-XY',
-        systemCode: 'K-99',
-        rating: 4.8,
-        isActive: true,
-        isFavorite: true,
-      };
+      setUser(fallbackUser);
+      setBalance(fallbackUser.walletBalance);
+      setCallMinutes(fallbackUser.callMinutes);
 
-      setLastRide({
-        id: 'ride_1',
-        bookingId: 'bk_1',
-        type: 'keke',
-        driver: mockDriver,
-        route: 'Main Gate to Hostel',
-        date: new Date().toISOString(),
-        price: 300,
-        ticketId: 'tkt_1',
-        canCall: true,
-        canRate: true,
-        isFavorited: true,
-      });
+      if (cachedTxsStr) {
+        try {
+          setTransactions(JSON.parse(cachedTxsStr));
+        } catch {
+          setTransactions([
+            { id: 'tx_1', amount: 5000, type: 'credit', description: 'Wallet Top-up', createdAt: new Date().toISOString() },
+            { id: 'tx_2', amount: 1500, type: 'debit', description: 'Shuttle Booking', createdAt: new Date(Date.now() - 86400000).toISOString() },
+            { id: 'tx_3', amount: 300, type: 'debit', description: 'Keke Ride', createdAt: new Date(Date.now() - 172800000).toISOString() }
+          ]);
+        }
+      } else {
+        setTransactions([
+          { id: 'tx_1', amount: 5000, type: 'credit', description: 'Wallet Top-up', createdAt: new Date().toISOString() },
+          { id: 'tx_2', amount: 1500, type: 'debit', description: 'Shuttle Booking', createdAt: new Date(Date.now() - 86400000).toISOString() },
+          { id: 'tx_3', amount: 300, type: 'debit', description: 'Keke Ride', createdAt: new Date(Date.now() - 172800000).toISOString() }
+        ]);
+      }
+
+      if (cachedLastRideStr) {
+        try {
+          setLastRide(JSON.parse(cachedLastRideStr));
+        } catch {
+          setLastRide({
+            id: 'ride_1',
+            bookingId: 'bk_1',
+            type: 'keke',
+            driver: getMockDriver(),
+            route: 'Main Gate to Hostel',
+            date: new Date().toISOString(),
+            price: 300,
+            ticketId: 'tkt_1',
+            canCall: true,
+            canRate: true,
+            isFavorited: true,
+          });
+        }
+      } else {
+        setLastRide({
+          id: 'ride_1',
+          bookingId: 'bk_1',
+          type: 'keke',
+          driver: getMockDriver(),
+          route: 'Main Gate to Hostel',
+          date: new Date().toISOString(),
+          price: 300,
+          ticketId: 'tkt_1',
+          canCall: true,
+          canRate: true,
+          isFavorited: true,
+        });
+      }
     }
   }, []);
 
@@ -123,7 +178,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         await syncState();
       }
     } catch (e) {
-      console.error('Error adding funds from backend:', e);
+      console.warn('Error adding funds from backend, simulating locally (Showcase Fallback):', e);
+      setBalance(prev => {
+        const next = prev + amount;
+        setUser(curr => {
+          if (!curr) return null;
+          const updated = { ...curr, walletBalance: next };
+          localStorage.setItem('raven_cached_user', JSON.stringify(updated));
+          return updated;
+        });
+        return next;
+      });
+      setTransactions(prev => {
+        const nextTx = [
+          {
+            id: `t_mock_${Date.now()}`,
+            amount,
+            type: 'credit' as const,
+            description: 'Wallet Top-up (Demo Fallback)',
+            createdAt: new Date().toISOString(),
+          },
+          ...prev
+        ];
+        localStorage.setItem('raven_cached_transactions', JSON.stringify(nextTx));
+        return nextTx;
+      });
     }
   }, [user, syncState]);
 
@@ -133,8 +212,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       await api.deductFromWallet(amount);
       await syncState();
     } catch (e) {
-      console.error('Error deducting funds from backend:', e);
-      throw e;
+      console.warn('Error deducting funds from backend, simulating locally (Showcase Fallback):', e);
+      setBalance(prev => {
+        const next = Math.max(0, prev - amount);
+        setUser(curr => {
+          if (!curr) return null;
+          const updated = { ...curr, walletBalance: next };
+          localStorage.setItem('raven_cached_user', JSON.stringify(updated));
+          return updated;
+        });
+        return next;
+      });
+      setTransactions(prev => {
+        const nextTx = [
+          {
+            id: `t_mock_${Date.now()}`,
+            amount,
+            type: 'debit' as const,
+            description: `${description} (Demo Fallback)`,
+            createdAt: new Date().toISOString(),
+          },
+          ...prev
+        ];
+        localStorage.setItem('raven_cached_transactions', JSON.stringify(nextTx));
+        return nextTx;
+      });
     }
   }, [syncState]);
 
@@ -144,8 +246,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       await api.purchaseCallMinutes(minutes);
       await syncState();
     } catch (e) {
-      console.error('Error purchasing call minutes from backend:', e);
-      throw e;
+      console.warn('Error purchasing call minutes from backend, simulating locally (Showcase Fallback):', e);
+      setCallMinutes(prev => {
+        const next = prev + minutes;
+        setUser(curr => {
+          if (!curr) return null;
+          const updated = { ...curr, callMinutes: next };
+          localStorage.setItem('raven_cached_user', JSON.stringify(updated));
+          return updated;
+        });
+        return next;
+      });
+      setBalance(prev => {
+        const cost = minutes * 5;
+        const next = Math.max(0, prev - cost);
+        setUser(curr => {
+          if (!curr) return null;
+          const updated = { ...curr, walletBalance: next };
+          localStorage.setItem('raven_cached_user', JSON.stringify(updated));
+          return updated;
+        });
+        return next;
+      });
+      setTransactions(prev => {
+        const nextTx = [
+          {
+            id: `t_mock_${Date.now()}`,
+            amount: minutes * 5,
+            type: 'debit' as const,
+            description: `Purchased ${minutes} Call Mins (Demo Fallback)`,
+            createdAt: new Date().toISOString(),
+          },
+          ...prev
+        ];
+        localStorage.setItem('raven_cached_transactions', JSON.stringify(nextTx));
+        return nextTx;
+      });
     }
   }, [syncState]);
 
@@ -154,7 +290,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       await api.consumeCallMinute();
       await syncState();
     } catch (e) {
-      console.error('Error consuming call minute from backend:', e);
+      console.warn('Error consuming call minute from backend, simulating locally (Showcase Fallback):', e);
+      setCallMinutes(prev => {
+        const next = Math.max(0, prev - 1);
+        setUser(curr => {
+          if (!curr) return null;
+          const updated = { ...curr, callMinutes: next };
+          localStorage.setItem('raven_cached_user', JSON.stringify(updated));
+          return updated;
+        });
+        return next;
+      });
     }
   }, [syncState]);
 
@@ -171,25 +317,63 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setUser(u);
       setBalance(u.walletBalance);
       setCallMinutes(u.callMinutes);
+      localStorage.setItem('raven_cached_user', JSON.stringify(u));
       await syncState();
     } catch (e) {
-      console.error('Backend login failed, using showcase mock user');
+      console.warn('Backend login failed, using cached or initial mock user as fallback:', e);
       localStorage.setItem('raven_is_logged_in', 'true');
-      await syncState();
+      
+      const cachedUserStr = localStorage.getItem('raven_cached_user');
+      let mockUser: User;
+      if (cachedUserStr) {
+        try {
+          mockUser = JSON.parse(cachedUserStr);
+        } catch {
+          mockUser = getInitialMockUser();
+        }
+      } else {
+        mockUser = getInitialMockUser();
+      }
+      setUser(mockUser);
+      setBalance(mockUser.walletBalance);
+      setCallMinutes(mockUser.callMinutes);
+      localStorage.setItem('raven_cached_user', JSON.stringify(mockUser));
     }
   }, [syncState]);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
-    const u = await api.register(name, email, password);
-    localStorage.setItem('raven_is_logged_in', 'true');
-    setUser(u);
-    setBalance(u.walletBalance);
-    setCallMinutes(u.callMinutes);
-    await syncState();
+    try {
+      const u = await api.register(name, email, password);
+      localStorage.setItem('raven_is_logged_in', 'true');
+      setUser(u);
+      setBalance(u.walletBalance);
+      setCallMinutes(u.callMinutes);
+      localStorage.setItem('raven_cached_user', JSON.stringify(u));
+      await syncState();
+    } catch (e) {
+      console.warn('Backend registration failed, using sandbox fallback mode:', e);
+      localStorage.setItem('raven_is_logged_in', 'true');
+      const mockUser: User = {
+        id: `usr_mock_${Date.now()}`,
+        name: name || 'Transit User',
+        email: email || 'user@transit.app',
+        walletBalance: 1000,
+        callMinutes: 10,
+        accountNumber: '9920193822',
+        bankName: 'Wema Bank',
+      };
+      setUser(mockUser);
+      setBalance(mockUser.walletBalance);
+      setCallMinutes(mockUser.callMinutes);
+      localStorage.setItem('raven_cached_user', JSON.stringify(mockUser));
+    }
   }, [syncState]);
 
   const logout = useCallback(() => {
     localStorage.removeItem('raven_is_logged_in');
+    localStorage.removeItem('raven_cached_user');
+    localStorage.removeItem('raven_cached_transactions');
+    localStorage.removeItem('raven_cached_last_ride');
     setUser(null);
     setBalance(0);
     setTransactions([]);

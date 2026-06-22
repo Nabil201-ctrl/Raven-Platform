@@ -1,41 +1,64 @@
 import type {
-  User, Shuttle, Booking, Transaction, Driver, Complaint, RideHistoryEntry
+  User, Shuttle, Booking, Transaction, Driver, Complaint, RideHistoryEntry, AuthResponse,
 } from '../types';
 
-const BASE_URL = 'http://localhost:5000/api';
+import { API_BASE } from '../config';
+import { authStorage } from './authStorage';
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+const BASE_URL = API_BASE;
+
+function parseErrorMessage(errorText: string, status: number): string {
+  try {
+    const parsed = JSON.parse(errorText);
+    if (parsed.message) {
+      return Array.isArray(parsed.message) ? parsed.message.join(', ') : parsed.message;
+    }
+  } catch {
+    // not JSON
+  }
+  if (status === 401) return 'Your session has expired. Please log in again.';
+  return errorText || 'Request failed';
+}
+
+async function request<T>(path: string, options?: RequestInit & { skipAuth?: boolean }): Promise<T> {
   const adminKey = localStorage.getItem('raven_admin_key') || '';
+  const token = authStorage.getToken();
   const headers = {
     'Content-Type': 'application/json',
+    ...(token && !options?.skipAuth ? { Authorization: `Bearer ${token}` } : {}),
     ...(adminKey ? { 'x-admin-key': adminKey } : {}),
     ...(options?.headers || {}),
   };
+  const { skipAuth: _skipAuth, ...fetchOptions } = options || {};
   const response = await fetch(`${BASE_URL}${path}`, {
-    ...options,
+    ...fetchOptions,
     headers,
   });
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(errorText || response.statusText);
+    const err = new Error(parseErrorMessage(errorText, response.status));
+    (err as any).status = response.status;
+    throw err;
   }
   return response.json() as Promise<T>;
 }
 
 export const api = {
   /* ── Auth / User ───────────────────────────────────── */
-  async login(email: string, password: string): Promise<User> {
-    return request<User>('/user/login', {
+  async login(email: string, password: string): Promise<AuthResponse> {
+    return request<AuthResponse>('/user/login', {
       method: 'POST',
+      skipAuth: true,
       body: JSON.stringify({ email, password }),
     });
   },
 
-  async register(name: string, email: string, password: string): Promise<User> {
-    return request<User>('/user/register', {
-      method: 'POST',
-      body: JSON.stringify({ name, email, password }),
-    });
+  async logout(): Promise<void> {
+    try {
+      await request<{ success: boolean }>('/user/logout', { method: 'POST' });
+    } catch {
+      // Clear local session even if server logout fails
+    }
   },
 
   async getCurrentUser(): Promise<User> {

@@ -1,40 +1,89 @@
 import type {
-  User, Shuttle, Booking, Transaction, Driver, Complaint, RideHistoryEntry
+  User, Shuttle, Booking, Transaction, Driver, Complaint, RideHistoryEntry, AuthResponse,
 } from '../types';
 
-const BASE_URL = 'http://localhost:5000/api';
+import { API_BASE } from '../config';
+import { authStorage } from './authStorage';
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+const BASE_URL = API_BASE;
+
+function parseErrorMessage(errorText: string, status: number): string {
+  try {
+    const parsed = JSON.parse(errorText);
+    if (parsed.message) {
+      return Array.isArray(parsed.message) ? parsed.message.join(', ') : parsed.message;
+    }
+  } catch {
+    // not JSON
+  }
+  if (status === 401) return 'Your session has expired. Please log in again.';
+  return errorText || 'Request failed';
+}
+
+async function request<T>(path: string, options?: RequestInit & { skipAuth?: boolean }): Promise<T> {
   const adminKey = localStorage.getItem('raven_admin_key') || '';
+  const token = authStorage.getToken();
   const headers = {
     'Content-Type': 'application/json',
+    ...(token && !options?.skipAuth ? { Authorization: `Bearer ${token}` } : {}),
     ...(adminKey ? { 'x-admin-key': adminKey } : {}),
     ...(options?.headers || {}),
   };
+  const { skipAuth: _skipAuth, ...fetchOptions } = options || {};
   const response = await fetch(`${BASE_URL}${path}`, {
-    ...options,
+    ...fetchOptions,
     headers,
   });
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(errorText || response.statusText);
+    const err = new Error(parseErrorMessage(errorText, response.status));
+    (err as any).status = response.status;
+    throw err;
   }
   return response.json() as Promise<T>;
 }
 
 export const api = {
   /* ── Auth / User ───────────────────────────────────── */
-  async login(email: string, password: string): Promise<User> {
-    return request<User>('/user/login', {
+  async login(email: string, password: string): Promise<AuthResponse> {
+    return request<AuthResponse>('/user/login', {
       method: 'POST',
+      skipAuth: true,
       body: JSON.stringify({ email, password }),
     });
   },
 
-  async register(name: string, email: string, password: string): Promise<User> {
-    return request<User>('/user/register', {
+  async logout(): Promise<void> {
+    try {
+      await request<{ success: boolean }>('/user/logout', { method: 'POST' });
+    } catch {
+      // Clear local session even if server logout fails
+    }
+  },
+
+  async register(
+    name: string,
+    email: string,
+    password: string,
+    avatar?: string,
+    phoneNumber?: string,
+    role?: string,
+    campusId?: string,
+    preferredRoute?: string,
+  ): Promise<AuthResponse> {
+    return request<AuthResponse>('/user/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password }),
+      skipAuth: true,
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        avatar,
+        phoneNumber,
+        role,
+        campusId,
+        preferredRoute,
+      }),
     });
   },
 
@@ -138,6 +187,19 @@ export const api = {
     return request<Driver[]>('/drivers');
   },
 
+  async getTransitStatus(): Promise<import('../types/transit').TransitStatus> {
+    return request<import('../types/transit').TransitStatus>('/transit/status', { skipAuth: true });
+  },
+
+  async getCarriers(filters?: { routeId?: string; from?: string; to?: string }): Promise<Driver[]> {
+    const params = new URLSearchParams();
+    if (filters?.routeId) params.set('routeId', filters.routeId);
+    if (filters?.from) params.set('from', filters.from);
+    if (filters?.to) params.set('to', filters.to);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return request<Driver[]>(`/drivers/carriers${query}`, { skipAuth: true });
+  },
+
   async registerDriver(data: { name: string; vehicleType: 'shuttle' | 'keke' | 'bike'; vehiclePlate: string }): Promise<Driver> {
     return request<Driver>('/drivers/register', {
       method: 'POST',
@@ -156,6 +218,13 @@ export const api = {
     await request<void>(`/drivers/${driverId}/favorite`, {
       method: 'POST',
       body: JSON.stringify({ isFavorite }),
+    });
+  },
+
+  async setDriverActive(driverId: string, isActive: boolean): Promise<Driver> {
+    return request<Driver>(`/drivers/${driverId}/active`, {
+      method: 'POST',
+      body: JSON.stringify({ isActive }),
     });
   },
 
@@ -252,5 +321,22 @@ export const api = {
 
   async getBooking(id: string): Promise<Booking> {
     return request<Booking>(`/bookings/${id}`);
+  },
+
+  /* ── Admin / Driver Management (used by AdminConsole & Driver flows) ── */
+  async approveDriver(id: string): Promise<Driver> {
+    return request<Driver>(`/drivers/${id}/approve`, { method: 'POST' });
+  },
+
+  async getRideHistory(page = 1, limit = 20): Promise<{ data: RideHistoryEntry[]; total: number }> {
+    return request<{ data: RideHistoryEntry[]; total: number }>(`/rides?page=${page}&limit=${limit}`);
+  },
+
+  async toggleDriverActive(driverId: string, isActive: boolean): Promise<Driver> {
+    // Reuse favorite endpoint as a proxy toggle for sandbox (or real active toggle if added later)
+    return request<Driver>(`/drivers/${driverId}/favorite`, {
+      method: 'POST',
+      body: JSON.stringify({ isFavorite: isActive }),
+    });
   },
 };

@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 // import { MongooseModule } from '@nestjs/mongoose';
 // import { CacheModule } from '@nestjs/cache-manager';
 // import { redisStore } from 'cache-manager-redis-yet';
+import { AuthModule } from './auth/auth.module';
 import { DbModule } from './db/db.module';
 import { HealthModule } from './health/health.module';
 import { UserModule } from './user/user.module';
@@ -13,6 +14,7 @@ import { WalletModule } from './wallet/wallet.module';
 import { DriverModule } from './driver/driver.module';
 import { ShuttleModule } from './shuttle/shuttle.module';
 import { BookingModule } from './booking/booking.module';
+import { TransitModule } from './transit/transit.module';
 
 @Module({
   imports: [
@@ -50,6 +52,7 @@ import { BookingModule } from './booking/booking.module';
       inject: [ConfigService],
     }),
     */
+    AuthModule,
     DbModule,
     HealthModule,
     UserModule,
@@ -57,6 +60,7 @@ import { BookingModule } from './booking/booking.module';
     DriverModule,
     ShuttleModule,
     BookingModule,
+    TransitModule,
   ],
   providers: [
     // Apply throttler globally

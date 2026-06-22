@@ -1,7 +1,8 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { ShuttleService } from './shuttle.service';
 import { AdminGuard } from '../common/guards/auth.guard';
-import { ResetSeatsDto } from '../common/dto/wallet.dto';
+import { ResetSeatsDto, CreateShuttleDto, UpdateShuttleDto } from '../common/dto/shuttle.dto';
+
 
 @Controller('api')
 export class ShuttleController {
@@ -47,13 +48,13 @@ export class ShuttleController {
 
   @Post('admin/shuttles')
   @UseGuards(AdminGuard)
-  createShuttle(@Body() data: any) {
+  createShuttle(@Body() data: CreateShuttleDto) {
     return this.shuttleService.createShuttle(data);
   }
 
   @Patch('admin/shuttles/:id')
   @UseGuards(AdminGuard)
-  updateShuttle(@Param('id') id: string, @Body() updates: any) {
+  updateShuttle(@Param('id') id: string, @Body() updates: UpdateShuttleDto) {
     return this.shuttleService.updateShuttle(id, updates);
   }
 

@@ -1,91 +1,47 @@
-import { IsNumber, IsString, IsOptional, Min, Max, IsNotEmpty, IsBoolean } from 'class-validator';
-
-export class WalletAmountDto {
-  @IsNumber()
-  @Min(1)
-  amount!: number;
-}
+import { IsNumber, IsString, IsOptional, Min, IsNotEmpty } from 'class-validator';
 
 export class MockDepositDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'User ID is required' })
   userId!: string;
 
   @IsNumber()
-  @Min(1)
+  @Min(1, { message: 'Deposit amount must be at least 1' })
   amount!: number;
 }
 
 export class CreateWalletDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'User ID is required' })
   userId!: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Name is required' })
   name!: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Email is required' })
   email!: string;
 }
 
 export class WithdrawDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'User ID is required' })
   userId!: string;
 
   @IsNumber()
-  @Min(1)
+  @Min(1, { message: 'Withdrawal amount must be at least 1' })
   amount!: number;
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Bank code is required' })
   bankCode!: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Account number is required' })
   accountNumber!: string;
 
   @IsOptional()
   @IsString()
   narration?: string;
-}
-
-export class RateDriverDto {
-  @IsNumber()
-  @Min(1)
-  @Max(5)
-  rating!: number;
-}
-
-export class FavoriteDriverDto {
-  @IsBoolean()
-  isFavorite!: boolean;
-}
-
-export class PurchaseMinutesDto {
-  @IsNumber()
-  @Min(1)
-  minutes!: number;
-}
-
-export class ResetSeatsDto {
-  @IsString()
-  @IsNotEmpty()
-  code!: string;
-}
-
-export class RegisterDriverDto {
-  @IsString()
-  @IsNotEmpty()
-  name!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  vehicleType!: 'shuttle' | 'keke' | 'bike';
-
-  @IsString()
-  @IsNotEmpty()
-  vehiclePlate!: string;
 }

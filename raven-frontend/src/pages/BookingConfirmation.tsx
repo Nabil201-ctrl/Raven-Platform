@@ -3,7 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import type { Booking, Driver } from '../types';
 import {
-  CheckCircleIcon, StarIcon, HeartIcon, FlagIcon, ThumbsUpIcon, PhoneIcon, ArrowLeftIcon,
+  CheckCircleIcon, StarIcon, HeartIcon, FlagIcon, ThumbsUpIcon, ArrowLeftIcon,
 } from '../icons';
 
 import QRCode from 'react-qr-code';
@@ -74,9 +74,6 @@ export const BookingConfirmation: React.FC = () => {
     }
   };
 
-  const handleCall = () => {
-    navigate('/calls');
-  };
 
   return (
     <div className="space-y-5 animate-fade-up">
@@ -237,13 +234,6 @@ export const BookingConfirmation: React.FC = () => {
                 </span>
               </div>
             </div>
-            <button
-              onClick={handleCall}
-              className="p-2.5 rounded-full transition-all active:scale-95"
-              style={{ background: 'var(--inset-bg)', color: 'var(--accent-blue-light)', border: '1px solid var(--card-border)' }}
-            >
-              <PhoneIcon size={16} />
-            </button>
           </div>
 
           {/* Action trio */}

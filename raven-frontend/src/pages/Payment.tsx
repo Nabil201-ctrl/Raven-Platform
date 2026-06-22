@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useWallet } from '../hooks/useWallet';
 import { useAppContext } from '../context/AppContext';
 import { api } from '../services/api';
 import type { PaymentState } from '../types';
-import { ArrowLeftIcon, WalletIcon } from '../icons';
+import { ArrowLeftIcon } from '../icons';
 
 export const Payment: React.FC = () => {
   const location    = useLocation();
   const navigate    = useNavigate();
-  const { balance } = useWallet();
   const { syncState } = useAppContext();
   const paymentData = location.state as PaymentState | null;
 
@@ -33,13 +31,8 @@ export const Payment: React.FC = () => {
   }
 
   const isShuttle          = paymentData.type === 'shuttle';
-  const hasSufficientBalance = balance >= selectedAmount;
 
   const handleConfirm = async () => {
-    if (!hasSufficientBalance) {
-      alert(`Insufficient wallet balance. Please top up ₦${(selectedAmount - balance).toLocaleString()} more.`);
-      return;
-    }
     setProcessing(true);
     try {
       const routeLabel = paymentData.route ||
@@ -152,37 +145,16 @@ export const Payment: React.FC = () => {
         </div>
       )}
 
-      {/* Wallet balance row */}
-      <div className="flex items-center justify-between rounded-xl px-4 py-3"
-        style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)' }}>
-        <div className="flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
-          <WalletIcon size={16} />
-          <span className="text-sm">Wallet balance</span>
-        </div>
-        <span className="text-sm font-bold"
-          style={{ color: hasSufficientBalance ? 'var(--green-active)' : '#ef4444',
-                   fontFamily: "'DM Mono', monospace" }}>
-          ₦{balance.toLocaleString('en-NG', { minimumFractionDigits: 2 })}
-        </span>
-      </div>
-
-      {!hasSufficientBalance && (
-        <p className="text-xs text-center" style={{ color: '#ef4444' }}>
-          Top up ₦{(selectedAmount - balance).toLocaleString()} more to proceed.
-        </p>
-      )}
-
       {/* Pay button */}
       <button onClick={handleConfirm}
-        disabled={processing || !hasSufficientBalance}
-        className="w-full py-4 rounded-2xl font-bold text-base transition-all active:scale-[0.98]"
+        disabled={processing}
+        className="w-full py-4 rounded-2xl font-bold text-base transition-all active:scale-[0.98] text-white"
         style={{
-          background: hasSufficientBalance ? 'var(--accent-blue)' : 'var(--inset-bg)',
-          color: hasSufficientBalance ? 'white' : 'var(--text-muted)',
-          cursor: !hasSufficientBalance ? 'not-allowed' : 'pointer',
+          background: 'var(--accent-blue)',
+          cursor: 'pointer',
           border: 'none',
         }}>
-        {processing ? 'Processing…' : `Pay ₦${selectedAmount.toLocaleString()}`}
+        {processing ? 'Confirming…' : 'Confirm Booking'}
       </button>
     </div>
   );

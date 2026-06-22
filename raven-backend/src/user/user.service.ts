@@ -1,11 +1,15 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { User, Transaction } from '../db/types';
+import { AuthService, AuthResult } from '../auth/auth.service';
 import axios from 'axios';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly db: DbService) {}
+  constructor(
+    private readonly db: DbService,
+    private readonly authService: AuthService,
+  ) {}
 
   getCurrentUser(): User {
     this.db.currentUser.walletBalance = this.db.walletDetails.balance;
@@ -64,7 +68,7 @@ export class UserService {
   }
 
   purchaseCallMinutes(minutes: number): User {
-    const pricePerMin = 15; // standard rate
+    const pricePerMin = 15;
     const totalPrice = minutes * pricePerMin;
     if (this.db.walletDetails.balance < totalPrice) {
       throw new BadRequestException('Insufficient wallet balance to buy call minutes');
@@ -94,61 +98,67 @@ export class UserService {
     return this.db.currentUser;
   }
 
-  login(email: string, passwordHash: string): User {
+  login(email: string, password: string): AuthResult {
     const user = this.db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (!user || user.passwordHash !== passwordHash) {
-      throw new BadRequestException('Invalid email or password');
+    if (!user) {
+      throw new UnauthorizedException('Invalid email or password');
     }
-    
-    // Switch current user state in DB
-    this.db.currentUser = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      avatar: user.avatar || '',
-      walletBalance: user.walletBalance,
-      callMinutes: user.callMinutes,
-    };
-    this.db.walletDetails = this.db.userWallets[user.id] || {
-      balance: user.walletBalance,
-      accountNumber: `88${Math.floor(10000000 + Math.random() * 90000000)}`,
-      bankName: 'Wema Bank (Simulated Sandbox)',
-      accountReference: `REF-SIM-${user.id}-${Date.now()}`,
-      currency: 'NGN',
-    };
-    this.db.transactions = this.db.userTransactions[user.id] || [];
-    this.db.saveToDisk();
-    
-    return {
-      ...this.db.currentUser,
-      accountNumber: this.db.walletDetails.accountNumber,
-      bankName: this.db.walletDetails.bankName,
-    };
+
+    if (!this.authService.verifyPassword(password, user.passwordHash)) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    return this.authService.buildAuthResult(user.id);
   }
 
-  async register(name: string, email: string, passwordHash: string): Promise<User> {
+  logout(token: string): { success: boolean } {
+    this.authService.revokeSession(token);
+    return { success: true };
+  }
+
+  async register(
+    name: string,
+    email: string,
+    password: string,
+    avatar?: string,
+    phoneNumber?: string,
+    role?: string,
+    campusId?: string,
+    preferredRoute?: string,
+  ): Promise<AuthResult> {
     const exists = this.db.users.some(u => u.email.toLowerCase() === email.toLowerCase());
     if (exists) {
       throw new BadRequestException('User with this email already exists');
     }
-    
+
+    const isProduction =
+      process.env.MONNIFY_ENV === 'production' ||
+      process.env.MONNIFY_ENV === 'live' ||
+      (process.env.APIKEY || '').trim().startsWith('MK_PROD_');
+    const initialBalance = isProduction ? 0 : 15000;
+    const initialCallMinutes = isProduction ? 0 : 10;
+
     const userId = `usr_${Date.now()}`;
     const newUser: User & { passwordHash?: string } = {
       id: userId,
       name,
       email,
-      walletBalance: 15000,
-      callMinutes: 10,
-      avatar: '',
-      passwordHash,
+      walletBalance: initialBalance,
+      callMinutes: initialCallMinutes,
+      avatar: avatar || '',
+      passwordHash: this.authService.hashPassword(password),
+      phoneNumber,
+      role,
+      campusId,
+      preferredRoute,
     };
-    
+
     this.db.users.push(newUser);
-    
+
     const simulatedAccount = {
-      balance: 15000,
+      balance: initialBalance,
       accountNumber: `88${Math.floor(10000000 + Math.random() * 90000000)}`,
-      bankName: 'Wema Bank (Simulated Sandbox)',
+      bankName: isProduction ? 'Wema Bank (Simulated Live Fallback)' : 'Wema Bank (Simulated Sandbox)',
       accountReference: `REF-SIM-${userId}-${Date.now()}`,
       currency: 'NGN',
     };
@@ -160,63 +170,49 @@ export class UserService {
 
       if (apiKey && secretKey && contractCode) {
         const auth = Buffer.from(`${apiKey}:${secretKey}`).toString('base64');
-        const tokenRes = await axios.post('https://sandbox.monnify.com/api/v1/auth/login', {}, {
+        const baseUrl = isProduction ? 'https://api.monnify.com' : 'https://sandbox.monnify.com';
+        const tokenRes = await axios.post(`${baseUrl}/api/v1/auth/login`, {}, {
           headers: { Authorization: `Basic ${auth}` },
         });
         const token = tokenRes.data.responseBody.accessToken;
         const accountReference = `REF-${userId}-${Date.now()}`;
 
-        const monnifyRes = await axios.post('https://sandbox.monnify.com/api/v2/bank-transfer/reserved-accounts', {
-          accountReference: accountReference,
+        const monnifyRes = await axios.post(`${baseUrl}/api/v2/bank-transfer/reserved-accounts`, {
+          accountReference,
           accountName: name,
-          currencyCode: "NGN",
-          contractCode: contractCode,
+          currencyCode: 'NGN',
+          contractCode,
           customerEmail: email,
           customerName: name,
           getAllAvailableBanks: false,
-          preferredBanks: ["035"]
+          preferredBanks: ['035'],
         }, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         const accountData = monnifyRes.data.responseBody.accounts[0];
         simulatedAccount.accountNumber = accountData.accountNumber;
         simulatedAccount.bankName = accountData.bankName;
         simulatedAccount.accountReference = accountReference;
-        console.log(`[Monnify Registration Sandbox] Virtual Reserved Account Successfully Setup: ${accountData.accountNumber} (${accountData.bankName})`);
+        console.log(`[Monnify Registration Setup] Virtual Reserved Account Successfully Setup: ${accountData.accountNumber} (${accountData.bankName})`);
       }
     } catch (e: any) {
-      console.warn('[Monnify Registration Sandbox Fallback] Creating simulated account for registration:', e.message);
+      console.warn('[Monnify Registration Fallback] Creating simulated account for registration:', e.message);
     }
 
     this.db.userWallets[userId] = simulatedAccount;
-    
-    this.db.userTransactions[userId] = [
+
+    this.db.userTransactions[userId] = initialBalance > 0 ? [
       {
         id: `t_${Date.now()}`,
-        amount: 15000,
+        amount: initialBalance,
         type: 'credit',
         description: 'Welcome Bonus Top-up',
         createdAt: new Date().toISOString(),
-      }
-    ];
-    
-    this.db.currentUser = {
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-      walletBalance: newUser.walletBalance,
-      callMinutes: newUser.callMinutes,
-      avatar: newUser.avatar,
-    };
-    this.db.walletDetails = this.db.userWallets[userId];
-    this.db.transactions = this.db.userTransactions[userId];
-    
+      },
+    ] : [];
+
     this.db.saveToDisk();
-    return {
-      ...this.db.currentUser,
-      accountNumber: this.db.walletDetails.accountNumber,
-      bankName: this.db.walletDetails.bankName,
-    };
+    return this.authService.buildAuthResult(userId);
   }
 }

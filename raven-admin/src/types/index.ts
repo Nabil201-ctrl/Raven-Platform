@@ -7,7 +7,18 @@ export interface User {
   callMinutes: number;
   accountNumber?: string;
   bankName?: string;
+  phoneNumber?: string;
+  role?: string;
+  campusId?: string;
+  preferredRoute?: string;
 }
+
+export interface AuthResponse {
+  user: User;
+  token: string;
+}
+
+export type RouteStop = 'Giri' | 'Gwagwalada' | 'Main Campus';
 
 export interface Driver {
   id: string;
@@ -22,6 +33,13 @@ export interface Driver {
   isFavorite?: boolean;
   isVerified?: boolean;
   isApproved?: boolean;
+  isCarrier?: boolean;
+  carrierRouteId?: string;
+  carrierFrom?: RouteStop;
+  carrierTo?: RouteStop;
+  carrierNotes?: string;
+  carrierSeatCapacity?: number;
+  carrierListedAt?: string;
 }
 
 export interface Shuttle {

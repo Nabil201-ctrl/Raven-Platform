@@ -11,8 +11,8 @@ export const Wallet: React.FC = () => {
 
   const bankDetails = {
     bank: user?.bankName || 'Wema Bank (Simulated Sandbox)',
-    accountNumber: user?.accountNumber || '8823490123',
-    accountName: user?.name || 'Oluwafemi Sheriff',
+    accountNumber: user?.accountNumber || '—',
+    accountName: user?.name || '—',
   };
 
   const handleCopy = () => {

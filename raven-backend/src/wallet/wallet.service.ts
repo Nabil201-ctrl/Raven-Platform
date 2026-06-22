@@ -1,18 +1,24 @@
 import { Injectable, NotFoundException, BadRequestException, OnModuleInit } from '@nestjs/common';
 import axios from 'axios';
 import { DbService } from '../db/db.service';
+import { MonnifyWebhookDto } from '../common/dto/monnify-webhook.dto';
 
 @Injectable()
 export class WalletService implements OnModuleInit {
   private API_KEY = (process.env.APIKEY || '').trim();
   private SECRET_KEY = (process.env.Secret_Key || '').trim();
   private CONTRACT_CODE = (process.env.Contract_Code || '').trim();
-  private BASE_URL = 'https://sandbox.monnify.com';
+  private BASE_URL = 
+    process.env.MONNIFY_ENV === 'production' || 
+    process.env.MONNIFY_ENV === 'live' || 
+    (process.env.APIKEY || '').trim().startsWith('MK_PROD_')
+      ? 'https://api.monnify.com'
+      : 'https://sandbox.monnify.com';
 
   constructor(private readonly db: DbService) {}
 
   async onModuleInit() {
-    console.log(`[Monnify Init] Checking keys - API_KEY: ${this.API_KEY ? 'Present' : 'Missing'}, CONTRACT: ${this.CONTRACT_CODE ? 'Present' : 'Missing'}`);
+    console.log(`[Monnify Init] Checking keys - API_KEY: ${this.API_KEY ? 'Present' : 'Missing'}, CONTRACT: ${this.CONTRACT_CODE ? 'Present' : 'Missing'}, URL: ${this.BASE_URL}`);
     await this.initVirtualAccount();
   }
 
@@ -113,7 +119,7 @@ export class WalletService implements OnModuleInit {
           createdAt: new Date().toISOString(),
         });
         this.db.saveToDisk();
-        console.log(`[Poll] Credited Oluwafemi with NGN ${totalDeposited}. Balance: ${this.db.walletDetails.balance}`);
+        console.log(`[Poll] Credited user ${this.db.currentUser.name} with NGN ${totalDeposited}. Balance: ${this.db.walletDetails.balance}`);
       }
     } catch (error) {
       // Gracefully continue with local balance if sandbox polling fails or keys are unset
@@ -136,7 +142,7 @@ export class WalletService implements OnModuleInit {
     return this.getWallet(userId);
   }
 
-  processWebhook(payload: any) {
+  processWebhook(payload: MonnifyWebhookDto) {
     console.log('[Monnify Webhook] Received deposit notification payload:', JSON.stringify(payload).substring(0, 200));
     if (payload.eventType === 'SUCCESSFUL_TRANSACTION') {
       const { amountPaid, paymentReference, accountReference } = payload.eventData;
@@ -162,6 +168,13 @@ export class WalletService implements OnModuleInit {
   }
 
   mockDeposit(userId: string, amount: number) {
+    const isProduction = 
+      process.env.MONNIFY_ENV === 'production' || 
+      process.env.MONNIFY_ENV === 'live' || 
+      (process.env.APIKEY || '').trim().startsWith('MK_PROD_');
+    if (isProduction) {
+      throw new BadRequestException('Mock deposits are disabled in production mode');
+    }
     this.db.walletDetails.balance += amount;
     this.db.currentUser.walletBalance = this.db.walletDetails.balance;
     this.db.transactions.unshift({

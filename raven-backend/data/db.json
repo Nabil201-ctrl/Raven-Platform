@@ -1,49 +1,592 @@
 {
   "currentUser": {
-    "id": "usr_os1",
-    "name": "Oluwafemi Sheriff",
-    "email": "femi@raven.app",
-    "walletBalance": 0,
-    "callMinutes": 0,
-    "avatar": ""
+    "id": "usr_1781597114444",
+    "name": "Abubakar Nabil",
+    "email": "abubakar.nabil.210@gmail.com",
+    "avatar": "avatar_rose",
+    "walletBalance": 14650,
+    "callMinutes": 10,
+    "phoneNumber": "08058784589",
+    "role": "student",
+    "campusId": "23/208CSC586",
+    "preferredRoute": "Giri ⇄ Main Campus"
   },
   "walletDetails": {
-    "balance": 0,
-    "accountNumber": "",
-    "bankName": "",
-    "accountReference": "",
+    "balance": 14650,
+    "accountNumber": "8849312155",
+    "bankName": "Wema Bank (Simulated Sandbox)",
+    "accountReference": "REF-SIM-usr_1781597114444-1781597114513",
     "currency": "NGN"
   },
-  "drivers": [],
-  "shuttles": [],
-  "transactions": [],
-  "bookings": [],
-  "complaints": [],
+  "drivers": [
+    {
+      "id": "drv_1001",
+      "name": "Chinedu Okoro",
+      "photo": "",
+      "vehicleType": "shuttle",
+      "vehiclePlate": "ABJ-481K",
+      "vehicleModel": "Toyota HiAce",
+      "systemCode": "1001",
+      "rating": 4.8,
+      "isActive": true,
+      "isVerified": true,
+      "isApproved": true,
+      "isFavorite": false
+    },
+    {
+      "id": "drv_2002",
+      "name": "Amina Yusuf",
+      "photo": "",
+      "vehicleType": "keke",
+      "vehiclePlate": "KJA-2002",
+      "systemCode": "2002",
+      "rating": 4.6,
+      "isActive": true,
+      "isVerified": true,
+      "isApproved": true,
+      "isFavorite": true
+    },
+    {
+      "id": "drv_1003",
+      "name": "Emeka Obi",
+      "photo": "",
+      "vehicleType": "shuttle",
+      "vehiclePlate": "ABJ-772X",
+      "vehicleModel": "Toyota Coaster",
+      "systemCode": "1003",
+      "rating": 4.9,
+      "isActive": true,
+      "isVerified": true,
+      "isApproved": true,
+      "isFavorite": false
+    },
+    {
+      "id": "drv_3003",
+      "name": "Bello Musa",
+      "photo": "",
+      "vehicleType": "keke",
+      "vehiclePlate": "KJA-3003",
+      "systemCode": "3003",
+      "rating": 4.3,
+      "isActive": true,
+      "isVerified": true,
+      "isApproved": true,
+      "isFavorite": false
+    },
+    {
+      "id": "drv_1005",
+      "name": "Fatima Lawal",
+      "photo": "",
+      "vehicleType": "shuttle",
+      "vehiclePlate": "ABJ-991Y",
+      "vehicleModel": "Ford Transit",
+      "systemCode": "1005",
+      "rating": 4.7,
+      "isActive": false,
+      "isVerified": true,
+      "isApproved": true,
+      "isFavorite": false
+    },
+    {
+      "id": "drv_4004",
+      "name": "Ibrahim Sule",
+      "photo": "",
+      "vehicleType": "bike",
+      "vehiclePlate": "BIKE-404",
+      "systemCode": "4004",
+      "rating": 4.5,
+      "isActive": true,
+      "isVerified": true,
+      "isApproved": true,
+      "isFavorite": false
+    },
+    {
+      "id": "drv_1781598313909",
+      "name": "AbuTask na",
+      "photo": "",
+      "vehicleType": "shuttle",
+      "vehiclePlate": "ABJejfw134",
+      "systemCode": "2119",
+      "rating": 5,
+      "isActive": false,
+      "isVerified": true,
+      "isApproved": true,
+      "isFavorite": false
+    }
+  ],
+  "shuttles": [
+    {
+      "id": "sh_1001",
+      "shuttleCode": "1001",
+      "route": {
+        "from": "Giri",
+        "to": "Gwagwalada"
+      },
+      "departureTime": "07:30",
+      "arrivalTime": "08:05",
+      "totalSeats": 14,
+      "availableSeats": 12,
+      "bookedSeats": [
+        5,
+        9
+      ],
+      "pricePerSeat": 350,
+      "premiumPricePerSeat": 1800,
+      "status": "available",
+      "driver": {
+        "id": "drv_1001",
+        "name": "Chinedu Okoro",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-481K",
+        "vehicleModel": "Toyota HiAce",
+        "systemCode": "1001",
+        "rating": 4.8,
+        "isActive": true,
+        "isVerified": true,
+        "isApproved": true,
+        "isFavorite": false
+      }
+    },
+    {
+      "id": "sh_1003",
+      "shuttleCode": "1003",
+      "route": {
+        "from": "Gwagwalada",
+        "to": "Giri"
+      },
+      "departureTime": "08:15",
+      "arrivalTime": "08:50",
+      "totalSeats": 14,
+      "availableSeats": 13,
+      "bookedSeats": [
+        2
+      ],
+      "pricePerSeat": 350,
+      "premiumPricePerSeat": 1800,
+      "status": "available",
+      "driver": {
+        "id": "drv_1003",
+        "name": "Emeka Obi",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-772X",
+        "vehicleModel": "Toyota Coaster",
+        "systemCode": "1003",
+        "rating": 4.9,
+        "isActive": true,
+        "isVerified": true,
+        "isApproved": true,
+        "isFavorite": false
+      }
+    },
+    {
+      "id": "sh_1005",
+      "shuttleCode": "1005",
+      "route": {
+        "from": "Giri",
+        "to": "Gwagwalada"
+      },
+      "departureTime": "09:00",
+      "arrivalTime": "09:35",
+      "totalSeats": 14,
+      "availableSeats": 1,
+      "bookedSeats": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "pricePerSeat": 400,
+      "premiumPricePerSeat": 1900,
+      "status": "available",
+      "driver": {
+        "id": "drv_1005",
+        "name": "Fatima Lawal",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-991Y",
+        "vehicleModel": "Ford Transit",
+        "systemCode": "1005",
+        "rating": 4.7,
+        "isActive": false,
+        "isVerified": true,
+        "isApproved": true,
+        "isFavorite": false
+      }
+    },
+    {
+      "id": "sh_1007",
+      "shuttleCode": "1007",
+      "route": {
+        "from": "Gwagwalada",
+        "to": "Giri"
+      },
+      "departureTime": "16:45",
+      "arrivalTime": "17:20",
+      "totalSeats": 14,
+      "availableSeats": 14,
+      "bookedSeats": [],
+      "pricePerSeat": 350,
+      "premiumPricePerSeat": 1750,
+      "status": "available",
+      "driver": {
+        "id": "drv_1001",
+        "name": "Chinedu Okoro",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-481K",
+        "vehicleModel": "Toyota HiAce",
+        "systemCode": "1001",
+        "rating": 4.8,
+        "isActive": true,
+        "isVerified": true,
+        "isApproved": true,
+        "isFavorite": false
+      }
+    }
+  ],
+  "transactions": [
+    {
+      "id": "t_bk_1781597487610",
+      "amount": 350,
+      "type": "debit",
+      "description": "Shuttle 1001 — Giri → Gwagwalada (Seats: 3)",
+      "createdAt": "2026-06-16T08:11:27.610Z"
+    },
+    {
+      "id": "t_1781597115091",
+      "amount": 15000,
+      "type": "credit",
+      "description": "Welcome Bonus Top-up",
+      "createdAt": "2026-06-16T08:05:15.091Z"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "book_1781596332426",
+      "type": "shuttle",
+      "route": "Gwagwalada → Giri",
+      "driver": {
+        "id": "drv_1003",
+        "name": "Emeka Obi",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-772X",
+        "vehicleModel": "Toyota Coaster",
+        "systemCode": "1003",
+        "rating": 4.9,
+        "isActive": true,
+        "isVerified": true,
+        "isApproved": true,
+        "isFavorite": false
+      },
+      "seats": [
+        2
+      ],
+      "seatNumbers": [
+        2
+      ],
+      "totalAmount": 350,
+      "status": "expired",
+      "createdAt": "2026-06-16T07:52:12.426Z",
+      "expiresAt": "2026-06-16T08:52:12.426Z",
+      "ticketId": "TKT-QUOGQR7H",
+      "qrCode": "",
+      "driverId": "drv_1003",
+      "departureTime": "08:15"
+    },
+    {
+      "id": "book_1781597487611",
+      "type": "shuttle",
+      "route": "Giri → Gwagwalada",
+      "driver": {
+        "id": "drv_1001",
+        "name": "Chinedu Okoro",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-481K",
+        "vehicleModel": "Toyota HiAce",
+        "systemCode": "1001",
+        "rating": 4.8,
+        "isActive": true,
+        "isVerified": true,
+        "isApproved": true,
+        "isFavorite": false
+      },
+      "seats": [
+        3
+      ],
+      "seatNumbers": [
+        3
+      ],
+      "totalAmount": 350,
+      "status": "expired",
+      "createdAt": "2026-06-16T08:11:27.611Z",
+      "expiresAt": "2026-06-16T09:11:27.611Z",
+      "ticketId": "TKT-0VI98KXT",
+      "qrCode": "",
+      "driverId": "drv_1001",
+      "departureTime": "07:30"
+    }
+  ],
+  "complaints": [
+    {
+      "id": "c_seed01",
+      "bookingId": "book_seed_hist",
+      "driverId": "drv_1001",
+      "message": "Driver took a slightly longer route today. Otherwise fine.",
+      "status": "resolved",
+      "createdAt": "2026-06-16T04:49:14.212Z"
+    }
+  ],
   "reverseTrips": [],
-  "rideHistory": [],
-  "lastRide": null,
+  "rideHistory": [
+    {
+      "id": "book_seed_hist",
+      "bookingId": "book_seed_hist",
+      "type": "shuttle",
+      "driver": {
+        "id": "drv_1001",
+        "name": "Chinedu Okoro",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-481K",
+        "vehicleModel": "Toyota HiAce",
+        "systemCode": "1001",
+        "rating": 4.8,
+        "isActive": true,
+        "isVerified": true,
+        "isApproved": true,
+        "isFavorite": false
+      },
+      "route": "Giri → Gwagwalada",
+      "date": "Yesterday",
+      "price": 700,
+      "ticketId": "TKT-SEED01",
+      "canCall": true,
+      "canRate": true,
+      "isFavorited": false
+    },
+    {
+      "id": "book_1781596332426",
+      "bookingId": "book_1781596332426",
+      "type": "shuttle",
+      "driver": {
+        "id": "drv_1003",
+        "name": "Emeka Obi",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-772X",
+        "vehicleModel": "Toyota Coaster",
+        "systemCode": "1003",
+        "rating": 4.9,
+        "isActive": true,
+        "isVerified": true,
+        "isApproved": true,
+        "isFavorite": false
+      },
+      "route": "Gwagwalada → Giri",
+      "date": "Today, Just now",
+      "price": 350,
+      "ticketId": "TKT-QUOGQR7H",
+      "canCall": false,
+      "canRate": true,
+      "isFavorited": false
+    },
+    {
+      "id": "book_1781597487611",
+      "bookingId": "book_1781597487611",
+      "type": "shuttle",
+      "driver": {
+        "id": "drv_1001",
+        "name": "Chinedu Okoro",
+        "photo": "",
+        "vehicleType": "shuttle",
+        "vehiclePlate": "ABJ-481K",
+        "vehicleModel": "Toyota HiAce",
+        "systemCode": "1001",
+        "rating": 4.8,
+        "isActive": true,
+        "isVerified": true,
+        "isApproved": true,
+        "isFavorite": false
+      },
+      "route": "Giri → Gwagwalada",
+      "date": "Today, Just now",
+      "price": 350,
+      "ticketId": "TKT-0VI98KXT",
+      "canCall": false,
+      "canRate": true,
+      "isFavorited": false
+    }
+  ],
+  "lastRide": {
+    "id": "book_1781597487611",
+    "bookingId": "book_1781597487611",
+    "type": "shuttle",
+    "driver": {
+      "id": "drv_1001",
+      "name": "Chinedu Okoro",
+      "photo": "",
+      "vehicleType": "shuttle",
+      "vehiclePlate": "ABJ-481K",
+      "vehicleModel": "Toyota HiAce",
+      "systemCode": "1001",
+      "rating": 4.8,
+      "isActive": true,
+      "isVerified": true,
+      "isApproved": true,
+      "isFavorite": false
+    },
+    "route": "Giri → Gwagwalada",
+    "date": "Today, Just now",
+    "price": 350,
+    "ticketId": "TKT-0VI98KXT",
+    "canCall": false,
+    "canRate": true,
+    "isFavorited": false
+  },
   "processedPayments": [],
   "users": [
     {
-      "id": "usr_os1",
-      "name": "Oluwafemi Sheriff",
-      "email": "femi@raven.app",
+      "id": "usr_demo001",
+      "name": "Aisha Bello",
+      "email": "aisha@student.unibuja.edu.ng",
+      "walletBalance": 24150,
+      "callMinutes": 18,
+      "avatar": "avatar_emerald",
+      "phoneNumber": "+2348035551122",
+      "role": "student",
+      "campusId": "22/SCI/487",
+      "preferredRoute": "Giri ⇄ Main Campus",
+      "passwordHash": "demo123"
+    },
+    {
+      "id": "usr_1781597114444",
+      "name": "Abubakar Nabil",
+      "email": "abubakar.nabil.210@gmail.com",
+      "walletBalance": 14650,
+      "callMinutes": 10,
+      "avatar": "avatar_rose",
+      "passwordHash": "74c59cd5a4f14f534cc7b58925563628:dbfb3325a058c4e9d2fca4b3b26370d20e843466383eae386a1ea38352a0ceaf0e51456bc3174af5e8ea382dc10106b1b3920c19924fe38a3fba275fabb5d045",
+      "phoneNumber": "08058784589",
+      "role": "student",
+      "campusId": "23/208CSC586",
+      "preferredRoute": "Giri ⇄ Main Campus"
+    },
+    {
+      "id": "usr_admin001",
+      "name": "Raven Administrator",
+      "email": "admin@raven.transit",
       "walletBalance": 0,
-      "avatar": "",
       "callMinutes": 0,
-      "passwordHash": "password123"
+      "avatar": "avatar_blue",
+      "phoneNumber": "+2348000000000",
+      "role": "admin",
+      "passwordHash": "admin123"
     }
   ],
   "userWallets": {
-    "usr_os1": {
+    "usr_demo001": {
+      "balance": 24150,
+      "accountNumber": "8820193847",
+      "bankName": "Wema Bank (Sandbox)",
+      "accountReference": "REF-SIM-usr_demo001",
+      "currency": "NGN"
+    },
+    "usr_1781597114444": {
+      "balance": 14650,
+      "accountNumber": "8849312155",
+      "bankName": "Wema Bank (Simulated Sandbox)",
+      "accountReference": "REF-SIM-usr_1781597114444-1781597114513",
+      "currency": "NGN"
+    },
+    "usr_admin001": {
       "balance": 0,
       "accountNumber": "",
       "bankName": "",
-      "accountReference": "",
+      "accountReference": "REF-ADMIN-usr_admin001",
       "currency": "NGN"
     }
   },
   "userTransactions": {
-    "usr_os1": []
-  }
+    "usr_demo001": [
+      {
+        "id": "t_bk_1781596332426",
+        "amount": 350,
+        "type": "debit",
+        "description": "Shuttle 1003 — Gwagwalada → Giri (Seats: 2)",
+        "createdAt": "2026-06-16T07:52:12.426Z"
+      },
+      {
+        "id": "t_seed1",
+        "amount": 15000,
+        "type": "credit",
+        "description": "Welcome Bonus Top-up",
+        "createdAt": "2026-06-15T05:49:14.211Z"
+      },
+      {
+        "id": "t_seed2",
+        "amount": 350,
+        "type": "debit",
+        "description": "Shuttle 1001 — Giri → Gwagwalada (Seat 3)",
+        "createdAt": "2026-06-16T02:49:14.212Z"
+      }
+    ],
+    "usr_1781597114444": [
+      {
+        "id": "t_bk_1781597487610",
+        "amount": 350,
+        "type": "debit",
+        "description": "Shuttle 1001 — Giri → Gwagwalada (Seats: 3)",
+        "createdAt": "2026-06-16T08:11:27.610Z"
+      },
+      {
+        "id": "t_1781597115091",
+        "amount": 15000,
+        "type": "credit",
+        "description": "Welcome Bonus Top-up",
+        "createdAt": "2026-06-16T08:05:15.091Z"
+      }
+    ],
+    "usr_admin001": []
+  },
+  "sessions": {
+    "0694ddce2888c357c484c7e7c2d755b46b7b4074db7732afead22893f7cfbff4": {
+      "userId": "usr_demo001",
+      "createdAt": "2026-06-16T08:02:01.486Z",
+      "expiresAt": "2026-06-23T08:02:01.486Z"
+    },
+    "ccf854c2b8cc236b1e672c6928802811c1111ee9766b984e55c13789eb70cd59": {
+      "userId": "usr_demo001",
+      "createdAt": "2026-06-16T08:02:05.996Z",
+      "expiresAt": "2026-06-23T08:02:05.996Z"
+    },
+    "0a9abe737bb9c4521cc1509344c783b47d5f31139723c2ac505f3fa2a54ddf4e": {
+      "userId": "usr_demo001",
+      "createdAt": "2026-06-16T08:02:15.714Z",
+      "expiresAt": "2026-06-23T08:02:15.714Z"
+    },
+    "b2ec40423d86688a8221b16e480f35ecbc0e50bc1da119d938e97fbce2b2ed50": {
+      "userId": "usr_1781597114444",
+      "createdAt": "2026-06-16T08:05:15.091Z",
+      "expiresAt": "2026-06-23T08:05:15.091Z"
+    },
+    "956af44469ab23ba75a89deff9ade89c7ae85ef2ba1ac5b7affb2e6ff5ad8710": {
+      "userId": "usr_admin001",
+      "createdAt": "2026-06-16T08:29:54.709Z",
+      "expiresAt": "2026-06-23T08:29:54.709Z"
+    }
+  },
+  "dailyTransitSession": null
 }

@@ -5,6 +5,7 @@ import { useAppContext } from '../context/AppContext';
 import type { Shuttle } from '../types';
 import { ArrowLeftIcon, CrownIcon, MapPinIcon, ClockIcon, StarIcon } from '../icons';
 import { io, Socket } from 'socket.io-client';
+import { WS_BASE, BOOKING_WS_NAMESPACE } from '../config';
 
 export const ShuttleBooking: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -29,7 +30,7 @@ export const ShuttleBooking: React.FC = () => {
       .finally(() => setLoading(false));
 
     // Connect to WebSocket namespace 'booking'
-    const socket = io('http://localhost:5000/booking', {
+    const socket = io(`${WS_BASE}${BOOKING_WS_NAMESPACE}`, {
       query: { userId: user?.id || 'anonymous' }
     });
     socketRef.current = socket;

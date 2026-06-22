@@ -2,25 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import type { RideHistoryEntry } from '../types';
-import { useCalls } from '../hooks/useCalls';
 import {
-  ArrowLeftIcon, PhoneIcon, HeartIcon, FlagIcon, ThumbsUpIcon,
+  ArrowLeftIcon, HeartIcon, FlagIcon, ThumbsUpIcon,
   StarIcon, KekeIcon, ShuttleIcon,
 } from '../icons';
 
 export const LastRideDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { hasMinutes, useCallMinute } = useCalls();
 
   const [ride, setRide] = useState<RideHistoryEntry | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [userRating, setUserRating] = useState(0);
-  const [activeCall, setActiveCall] = useState<{
-    proxyPhone: string;
-    driverName: string;
-    established: boolean;
-  } | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -37,28 +30,6 @@ export const LastRideDetails: React.FC = () => {
       </div>
     );
   }
-
-  const handleCall = async () => {
-    if (!hasMinutes) {
-      alert('No call minutes remaining. Purchase a call pack first.');
-      navigate('/calls');
-      return;
-    }
-    try {
-      const res = await api.initiateMaskedCall(ride.driver.id);
-      useCallMinute();
-      setActiveCall({
-        proxyPhone: res.proxyPhone || (ride.driver.systemCode === '1001' ? '+234 700 748 8853' : '+234 700 748 8854'),
-        driverName: ride.driver.name,
-        established: false,
-      });
-      setTimeout(() => {
-        setActiveCall(prev => prev ? { ...prev, established: true } : null);
-      }, 3000);
-    } catch {
-      alert('Could not initiate call. Please try again.');
-    }
-  };
 
   const handleToggleFavorite = async () => {
     const next = !isFavorite;
@@ -171,20 +142,7 @@ export const LastRideDetails: React.FC = () => {
         <div style={{ borderTop: '1px solid var(--card-border)' }} />
 
         {/* Action buttons */}
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            onClick={handleCall}
-            className="flex flex-col items-center gap-2 py-4 rounded-xl transition-all active:scale-95"
-            style={{
-              background: 'var(--inset-bg)',
-              border: '1px solid var(--card-border)',
-              color: 'var(--accent-blue-light)',
-            }}
-          >
-            <PhoneIcon size={18} />
-            <span className="text-xs font-medium">Call</span>
-          </button>
-
+        <div className="grid grid-cols-2 gap-2">
           <button
             onClick={handleComplaint}
             className="flex flex-col items-center gap-2 py-4 rounded-xl transition-all active:scale-95"
@@ -238,70 +196,7 @@ export const LastRideDetails: React.FC = () => {
         ))}
       </div>
 
-      {/* Secure Masked Call Overlay */}
-      {activeCall && (
-        <div
-          className="fixed inset-0 z-55 flex flex-col items-center justify-center p-6 animate-fade-in"
-          style={{ background: 'rgba(0, 10, 30, 0.95)', backdropFilter: 'blur(12px)', position: 'fixed', left: 0, right: 0, top: 0, bottom: 0 }}
-        >
-          <style>{`
-            @keyframes pulseRing {
-              0% { transform: scale(0.95); opacity: 0.8; }
-              50% { transform: scale(1.15); opacity: 0.35; }
-              100% { transform: scale(1.35); opacity: 0; }
-            }
-            .pulse-ring {
-              position: absolute;
-              inset: -20px;
-              border: 2px solid var(--accent-blue);
-              border-radius: 50%;
-              animation: pulseRing 2s infinite ease-out;
-            }
-            .pulse-ring-2 {
-              position: absolute;
-              inset: -40px;
-              border: 2px solid var(--accent-cyan);
-              border-radius: 50%;
-              animation: pulseRing 2s infinite ease-out;
-              animation-delay: 0.75s;
-            }
-          `}</style>
 
-          <div className="relative w-40 h-40 rounded-full flex items-center justify-center mb-8"
-               style={{ background: 'var(--inset-bg)', border: '1px solid var(--card-border)' }}>
-            <div className="pulse-ring" />
-            <div className="pulse-ring-2" />
-            <div className="w-32 h-32 rounded-full flex items-center justify-center" style={{ background: 'var(--avatar-bg)' }}>
-              <PhoneIcon size={44} style={{ color: activeCall.established ? 'var(--green-active)' : 'var(--accent-blue-light)' } as React.CSSProperties} />
-            </div>
-          </div>
-
-          <h2 className="text-2xl font-bold text-center text-white mb-2">{activeCall.driverName}</h2>
-          <p className="text-sm text-center mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>SECURE PROXY DIALING</p>
-          <p className="text-xl font-bold font-mono tracking-wide text-center mb-6" style={{ color: 'var(--accent-blue-light)' }}>
-            {activeCall.proxyPhone}
-          </p>
-
-          <div className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider mb-12"
-               style={{ 
-                 background: activeCall.established ? 'rgba(34,197,94,0.12)' : 'rgba(42,111,245,0.12)', 
-                 color: activeCall.established ? 'var(--green-active)' : 'var(--accent-blue-light)',
-                 border: `1px solid ${activeCall.established ? 'rgba(34,197,94,0.3)' : 'rgba(42,111,245,0.3)'}`
-               }}>
-            {activeCall.established ? 'Secure Routing Established' : 'Initiating Secure Routing...'}
-          </div>
-
-          <button
-            onClick={() => setActiveCall(null)}
-            className="w-16 h-16 rounded-full flex items-center justify-center bg-red-600 hover:bg-red-700 active:scale-95 transition-all shadow-lg"
-            style={{ border: 'none' }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 text-white rotate-[135deg]">
-              <path fillRule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 0 1-.694 1.955l-1.293.97c-.135.101-.18.282-.108.43a13.39 13.39 0 0 0 5.252 5.252c.148.072.33.027.43-.108l.97-1.293a1.875 1.875 0 0 1 1.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
-      )}
     </div>
   );
 };

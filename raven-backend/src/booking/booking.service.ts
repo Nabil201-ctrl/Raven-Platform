@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { DbService } from '../db/db.service';
 import { Booking, RideHistoryEntry, Driver, Shuttle, Complaint } from '../db/types';
 import { BookingGateway } from './booking.gateway';
+import { TransitScheduleService } from '../transit/transit-schedule.service';
 
 @Injectable()
 export class BookingService {
@@ -11,6 +12,7 @@ export class BookingService {
   constructor(
     private readonly db: DbService,
     private readonly bookingGateway: BookingGateway,
+    private readonly transitSchedule: TransitScheduleService,
   ) {}
 
   /* ── Ride History ──────────────────────────────────────── */
@@ -79,6 +81,8 @@ export class BookingService {
     shuttleId?: string;
     departureTime?: string;
   }): Booking {
+    this.transitSchedule.assertDayStartedForPassengers();
+
     let driver: Driver;
     let targetShuttle: Shuttle | undefined;
     let txDescription = 'Ride payment';
@@ -130,19 +134,31 @@ export class BookingService {
       driver = this.db.drivers[0];
     }
 
-    // Process wallet deduction
-    if (this.db.walletDetails.balance < data.amount) {
-      throw new BadRequestException('Insufficient wallet balance');
+    // Wallet deduction (real)
+    const user = this.db.currentUser;
+    const wallet = this.db.walletDetails;
+    if (wallet.balance < data.amount) {
+      throw new BadRequestException('Insufficient wallet balance. Please top-up.');
     }
-    this.db.walletDetails.balance -= data.amount;
-    this.db.currentUser.walletBalance = this.db.walletDetails.balance;
+    wallet.balance -= data.amount;
+    user.walletBalance = wallet.balance;
+
     this.db.transactions.unshift({
-      id: `t_${Date.now()}`,
+      id: `t_bk_${Date.now()}`,
       amount: data.amount,
       type: 'debit',
       description: txDescription,
       createdAt: new Date().toISOString(),
     });
+
+    // Persist user state
+    const uid = user.id;
+    if (uid) {
+      this.db.userWallets[uid] = { ...wallet };
+      this.db.userTransactions[uid] = [...this.db.transactions];
+    }
+    this.db.saveToDisk();
+
 
     const newBooking: Booking = {
       id: `book_${Date.now()}`,
@@ -162,6 +178,7 @@ export class BookingService {
     };
 
     this.db.bookings.push(newBooking);
+    this.transitSchedule.ensureDayStarted({ bookingId: newBooking.id, driverId: data.driverId });
 
     const historyEntry: RideHistoryEntry = {
       id: newBooking.id,
@@ -172,7 +189,7 @@ export class BookingService {
       date: 'Today, Just now',
       price: newBooking.totalAmount,
       ticketId: newBooking.ticketId || '',
-      canCall: true,
+      canCall: false,
       canRate: true,
       isFavorited: !!newBooking.driver.isFavorite,
     };
@@ -212,16 +229,8 @@ export class BookingService {
       }
     }
 
-    // Refund wallet
-    this.db.walletDetails.balance += booking.totalAmount;
-    this.db.currentUser.walletBalance = this.db.walletDetails.balance;
-    this.db.transactions.unshift({
-      id: `t_refund_${Date.now()}`,
-      amount: booking.totalAmount,
-      type: 'credit',
-      description: `Refund — Cancelled booking ${booking.ticketId || booking.id}`,
-      createdAt: new Date().toISOString(),
-    });
+    // Wallet refund bypassed for direct booking mode
+
 
     this.db.saveToDisk();
     this.logger.log(`Booking ${id} cancelled and ₦${booking.totalAmount} refunded.`);

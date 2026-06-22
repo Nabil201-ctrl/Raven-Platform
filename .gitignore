@@ -1,4 +1,23 @@
+# Root + all subprojects
 node_modules/
 dist/
 .env
+.env.local
+.env.*.local
 .DS_Store
+*.log
+
+# Backend specific
+data/db.json
+coverage/
+.nyc_output/
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build artifacts that shouldn't be committed (keep only source)
+raven-*/dist/
+raven-*/.vite/

@@ -165,6 +165,32 @@ export class BookingGateway implements OnGatewayConnection, OnGatewayDisconnect,
     this.server.to('tracking:live').emit('driver:telemetry', data);
   }
 
+  // Demo-only handler: allows a driver console to manually trigger an inbound reverse-trip alert over WS.
+  // In real life this would be driven exclusively by the booking service when a shuttle fills.
+  @SubscribeMessage('transit:reverse-trip:trigger')
+  handleManualReverseTripTrigger(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { vehicleCode?: string; route?: string; driverName?: string },
+  ) {
+    const trip = {
+      id: `RT-MANUAL-${Date.now()}`,
+      vehicleCode: data.vehicleCode || '1001',
+      driverName: data.driverName || 'Driver',
+      vehicleDetails: `Manual trigger from driver console`,
+      route: data.route || 'Gwagwalada → Giri',
+      status: 'INBOUND',
+      estimatedArrivalAt: new Date(Date.now() + 7 * 60 * 1000).toISOString(),
+      message: `Manual reverse trip alert for ${data.vehicleCode || 'vehicle'} (demo).`,
+      createdAt: new Date().toISOString(),
+    };
+    // Keep a few in memory for new connections
+    this.db.reverseTrips.unshift(trip);
+    if (this.db.reverseTrips.length > 8) this.db.reverseTrips.length = 8;
+
+    this.logger.log(`[WS] Manual reverse trip triggered for ${trip.vehicleCode}`);
+    this.server.emit('transit:reverse-trip:added', trip);
+  }
+
   // --- External service triggering helpers ---
   
   // Call this when a new booking is finalized to sync seat layout updates instantly
@@ -191,6 +217,21 @@ export class BookingGateway implements OnGatewayConnection, OnGatewayDisconnect,
   broadcastReverseTripAlert(reverseTrip: any) {
     this.logger.log(` Broadcasting Inbound Reverse Trip Alert: ${reverseTrip.vehicleCode}`);
     this.server.emit('transit:reverse-trip:added', reverseTrip);
+  }
+
+  emitDriverCarrierUpdated(driver: { id: string; name: string; carrierFrom?: string; carrierTo?: string }) {
+    this.logger.log(` Driver carrier listing updated: ${driver.name} on ${driver.carrierFrom || '?'} → ${driver.carrierTo || '?'}`);
+    this.server.emit('driver:carrier:updated', driver);
+  }
+
+  emitTransitDayStarted(status: unknown) {
+    this.logger.log(' Transit day started — broadcasting to clients');
+    this.server.emit('transit:day:started', status);
+  }
+
+  emitTransitClosed(status: unknown) {
+    this.logger.log(' Transit closed for the day');
+    this.server.emit('transit:closed', status);
   }
 
   // --- Internals ---

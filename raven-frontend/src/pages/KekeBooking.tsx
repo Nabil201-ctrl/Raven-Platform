@@ -101,13 +101,19 @@ export const KekeBooking: React.FC = () => {
         </div>
 
         <div
-          className="mt-4 rounded-xl px-3 py-2 flex justify-between"
+          className="mt-4 rounded-xl px-3 py-2 grid grid-cols-3 gap-2"
           style={{ background: 'var(--inset-bg)' }}
         >
           <div>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>System Code</p>
             <p className="text-sm font-bold mt-0.5" style={{ color: 'var(--text-primary)', fontFamily: "'DM Mono', monospace" }}>
               {driver.systemCode}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Seats</p>
+            <p className="text-sm font-bold mt-0.5" style={{ color: 'var(--text-primary)', fontFamily: "'DM Mono', monospace" }}>
+              {driver.carrierSeatCapacity ?? '—'}
             </p>
           </div>
           <div className="text-right">

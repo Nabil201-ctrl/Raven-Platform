@@ -9,6 +9,8 @@ export interface User {
   bankName?: string;
 }
 
+export type RouteStop = 'Giri' | 'Gwagwalada' | 'Main Campus';
+
 export interface Driver {
   id: string;
   name: string;
@@ -22,6 +24,14 @@ export interface Driver {
   isFavorite?: boolean;
   isVerified?: boolean;
   isApproved?: boolean;
+  isCarrier?: boolean;
+  carrierRouteId?: string;
+  carrierFrom?: RouteStop;
+  carrierTo?: RouteStop;
+  carrierNotes?: string;
+  carrierSeatCapacity?: number;
+  carrierListedAt?: string;
+  carrierRouteLockedUntil?: string;
 }
 
 export interface Shuttle {

@@ -1,6 +1,6 @@
 import { useAppContext } from '../context/AppContext';
 
 export const useAuth = () => {
-  const { user } = useAppContext();
-  return { user, loading: user === null };
+  const { user, authChecking, isAuthenticated } = useAppContext();
+  return { user, loading: authChecking, isAuthenticated };
 };

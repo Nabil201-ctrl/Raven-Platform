@@ -1,73 +1,61 @@
-# React + TypeScript + Vite
+# 🐦 Raven Frontend (Passenger App)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Production-grade React + TypeScript + Vite client for the Raven campus transit platform.
 
-Currently, two official plugins are available:
+Real-time seat booking, live shuttle telemetry, wallet (Monnify sandbox), voice calls, and reverse-trip pre-booking flows.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Quick Start
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev          # Runs on http://localhost:3000 (proxies /api -> backend :5000)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Environment Configuration (Production Critical)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Never hardcode backend URLs. Use environment variables:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cp .env.example .env
 ```
+
+- `VITE_API_BASE` — Full backend API root (with `/api`)
+- `VITE_WS_BASE` — WebSocket root
+
+**Production (Vercel / hosting):**
+Set the same `VITE_*` variables in your platform's environment settings before build. Example:
+
+```
+VITE_API_BASE=https://raven-backend.example.com/api
+VITE_WS_BASE=https://raven-backend.example.com
+```
+
+## Available Scripts
+
+| Script        | Description                              |
+|---------------|------------------------------------------|
+| `dev`         | Start local dev server + HMR             |
+| `build`       | Type-check + production build to `dist/` |
+| `preview`     | Preview production build locally         |
+| `lint`        | Run ESLint (strict, zero warnings)       |
+| `lint:fix`    | Auto-fix lint issues                     |
+| `typecheck`   | Run TypeScript compiler with no emit     |
+
+## Production Readiness Features (Frontend)
+
+- Strict TypeScript + Vite production build config (manual chunks, es2020 target)
+- Environment-driven API / WS endpoints (no localhost in prod builds)
+- React ErrorBoundary at root for graceful crash recovery
+- ESLint + React Hooks + Refresh rules + TypeScript rules
+- SPA routing handled via vercel.json rewrites + _redirects
+- Responsive, accessible dark-first UI with theme tokens
+- Real-time via socket.io-client with proper room management
+
+## Deployment
+
+- **Vercel**: Connect repo, set Framework preset "Vite", add the VITE_* env vars, and deploy. The `vercel.json` + `_redirects` ensure SPA fallback.
+- Backend must be separately deployed (Docker / Railway / Render / Fly.io etc) and expose the public API base.
+
+## Notes
+
+The current implementation includes showcase fallbacks when the backend is unreachable or in early development. In true production, wire up robust error toasts + disable heavy silent mocks (controlled via future `VITE_DEMO_MODE` flag).

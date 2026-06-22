@@ -7,7 +7,13 @@ export interface User {
   callMinutes: number;
   accountNumber?: string;
   bankName?: string;
+  phoneNumber?: string;
+  role?: string;
+  campusId?: string;
+  preferredRoute?: string;
 }
+
+export type RouteStop = 'Giri' | 'Gwagwalada' | 'Main Campus';
 
 export interface Driver {
   id: string;
@@ -22,6 +28,17 @@ export interface Driver {
   isFavorite?: boolean;
   isVerified?: boolean;
   isApproved?: boolean;
+  /** Listed as available carrier after arrival form is submitted */
+  isCarrier?: boolean;
+  carrierRouteId?: string;
+  carrierFrom?: RouteStop;
+  carrierTo?: RouteStop;
+  carrierNotes?: string;
+  /** Total passenger seats the driver declares when listing */
+  carrierSeatCapacity?: number;
+  carrierListedAt?: string;
+  /** ISO timestamp — driver cannot switch routes until this time */
+  carrierRouteLockedUntil?: string;
 }
 
 export interface Shuttle {
@@ -113,6 +130,13 @@ export interface Complaint {
   message: string;
   status: 'pending' | 'resolved';
   createdAt: string;
+}
+
+export interface DailyTransitSession {
+  date: string;
+  startedAt: string;
+  startedByDriverId?: string;
+  startedByBookingId?: string;
 }
 
 export interface Wallet {

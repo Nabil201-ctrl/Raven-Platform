@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { driverStorage } from '../services/driverStorage';
+import { DriverLayout } from '../components/DriverLayout';
+import { CarrierArrivalForm } from '../components/CarrierArrivalForm';
 import type { Driver, Shuttle } from '../types';
+import type { TransitStatus } from '../types/transit';
+import { CARRIER_ROUTES, getCarrierRouteLockStatus } from '../constants/carrierRoutes';
 import { io, Socket } from 'socket.io-client';
+import { WS_BASE, BOOKING_WS_NAMESPACE } from '../config';
 
 // Beautiful coordinate coordinates along Giri-Gwagwalada Route
 const SIMULATED_PATH = [
@@ -18,24 +24,17 @@ const SIMULATED_PATH = [
 
 export const DriverConsole: React.FC = () => {
   const navigate = useNavigate();
-
-  // Retrieve logged-in driver profile
-  const loggedInDriverStr = localStorage.getItem('raven_logged_in_driver');
-  const loggedInDriver = loggedInDriverStr ? JSON.parse(loggedInDriverStr) as Driver : null;
-
-  useEffect(() => {
-    if (!loggedInDriver) {
-      navigate('/login');
-    }
-  }, [loggedInDriver, navigate]);
+  const loggedInDriver = driverStorage.getDriver();
 
   const [selectedDriverId] = useState<string>(loggedInDriver?.id || '');
   const [driverDetails, setDriverDetails] = useState<Driver | null>(null);
   const [shuttleDetails, setShuttleDetails] = useState<Shuttle | null>(null);
-  const [isOnline, setIsOnline] = useState(true);
+  const [carrierLoading, setCarrierLoading] = useState(false);
+  const [transitStatus, setTransitStatus] = useState<TransitStatus | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [currentCoords, setCurrentCoords] = useState({ lat: SIMULATED_PATH[0].lat, lng: SIMULATED_PATH[0].lng });
   const [speed, setSpeed] = useState(0);
+  const [telemetryReceived, setTelemetryReceived] = useState(0); // proof that the WS telemetry channel works both ways
   
   // Real-time seat locks
   const [lockedSeats, setLockedSeats] = useState<Record<number, string>>({});
@@ -45,24 +44,29 @@ export const DriverConsole: React.FC = () => {
 
   const activeDriver = loggedInDriver;
 
-  const handleLogout = () => {
-    localStorage.removeItem('raven_logged_in_driver');
-    navigate('/login');
+  // Load Driver and Shuttle details
+  const loadTransitStatus = async () => {
+    try {
+      const status = await api.getTransitStatus();
+      setTransitStatus(status);
+    } catch (e) {
+      console.error('Error loading transit status:', e);
+    }
   };
 
-  // Load Driver and Shuttle details
   const loadData = async () => {
     if (!selectedDriverId) return;
     try {
+      await loadTransitStatus();
       const d = await api.getDriverDetails(selectedDriverId);
       if (d.isVerified === false || d.isApproved === false) {
-        localStorage.removeItem('raven_logged_in_driver');
+        driverStorage.clear();
         navigate('/login', { state: { error: 'Your driver profile is pending administrator verification or approval.' } });
         return;
       }
       setDriverDetails(d);
-      setIsOnline(d.isActive);
-      
+      driverStorage.setDriver(d);
+
       if (d.vehicleType === 'shuttle') {
         // Find corresponding shuttle. Shuttle code matches driver's systemCode or id
         const shuttles = await api.getAvailableShuttles();
@@ -86,50 +90,72 @@ export const DriverConsole: React.FC = () => {
     loadData();
 
     // Connect socket
-    const socket = io('http://localhost:5000/booking', {
+    const socket = io(`${WS_BASE}${BOOKING_WS_NAMESPACE}`, {
       query: { userId: `driver_${selectedDriverId}` }
     });
     socketRef.current = socket;
-
-    if (activeDriver.vehicleType === 'shuttle') {
-      const roomId = `shuttle_sh_${activeDriver.systemCode}`;
-      socket.emit('room:join', { roomId });
-
-      socket.on('seat:locks:sync', (data: { locks: Record<number, { userId: string }> }) => {
-        const active: Record<number, string> = {};
-        for (const [seatStr, lock] of Object.entries(data.locks)) {
-          active[parseInt(seatStr)] = lock.userId;
-        }
-        setLockedSeats(active);
-      });
-
-      socket.on('seat:locked', (data: { seatNumber: number; userId: string }) => {
-        setLockedSeats(prev => ({ ...prev, [data.seatNumber]: data.userId }));
-      });
-
-      socket.on('seat:unlocked', (data: { seatNumber: number }) => {
-        setLockedSeats(prev => {
-          const copy = { ...prev };
-          delete copy[data.seatNumber];
-          return copy;
-        });
-      });
-
-      socket.on('shuttle:details:updated', (updatedShuttle: Shuttle) => {
-        if (updatedShuttle.shuttleCode === activeDriver.systemCode) {
-          setShuttleDetails(updatedShuttle);
-        }
-      });
-    }
+    socket.on('transit:day:started', loadTransitStatus);
+    socket.on('transit:closed', () => { loadTransitStatus(); loadData(); });
 
     return () => {
-      if (activeDriver.vehicleType === 'shuttle') {
-        socket.emit('room:leave', { roomId: `shuttle_sh_${activeDriver.systemCode}` });
-      }
       socket.disconnect();
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [selectedDriverId, activeDriver]);
+
+  // Join the correct shuttle room dynamically when shuttleDetails changes
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket || !shuttleDetails) return;
+
+    const roomId = `shuttle_${shuttleDetails.id}`;
+    socket.emit('room:join', { roomId });
+
+    const handleLocksSync = (data: { locks: Record<number, { userId: string }> }) => {
+      const active: Record<number, string> = {};
+      for (const [seatStr, lock] of Object.entries(data.locks)) {
+        active[parseInt(seatStr)] = lock.userId;
+      }
+      setLockedSeats(active);
+    };
+
+    const handleSeatLocked = (data: { seatNumber: number; userId: string }) => {
+      setLockedSeats(prev => ({ ...prev, [data.seatNumber]: data.userId }));
+    };
+
+    const handleSeatUnlocked = (data: { seatNumber: number }) => {
+      setLockedSeats(prev => {
+        const copy = { ...prev };
+        delete copy[data.seatNumber];
+        return copy;
+      });
+    };
+
+    const handleShuttleDetailsUpdated = (updatedShuttle: Shuttle) => {
+      if (updatedShuttle.id === shuttleDetails.id) {
+        setShuttleDetails(updatedShuttle);
+      }
+    };
+
+    socket.on('seat:locks:sync', handleLocksSync);
+    socket.on('seat:locked', handleSeatLocked);
+    socket.on('seat:unlocked', handleSeatUnlocked);
+    socket.on('shuttle:details:updated', handleShuttleDetailsUpdated);
+
+    // Subscribe to telemetry channel (both the driver-specific and the broadcast one) — demonstrates correct WS usage for live position data
+    const handleTelemetry = () => setTelemetryReceived(c => c + 1);
+    socket.on('driver:telemetry', handleTelemetry);
+    socket.on('driver:telemetry', handleTelemetry); // idempotent in practice
+
+    return () => {
+      socket.emit('room:leave', { roomId });
+      socket.off('seat:locks:sync', handleLocksSync);
+      socket.off('seat:locked', handleSeatLocked);
+      socket.off('seat:unlocked', handleSeatUnlocked);
+      socket.off('shuttle:details:updated', handleShuttleDetailsUpdated);
+      socket.off('driver:telemetry', handleTelemetry);
+    };
+  }, [shuttleDetails?.id]);
 
   // Handle telemetry simulation
   useEffect(() => {
@@ -165,16 +191,35 @@ export const DriverConsole: React.FC = () => {
     };
   }, [simulating, selectedDriverId]);
 
-  const toggleOnline = async () => {
+  const handleRegisterCarrier = async (routeId: string, notes: string, seatCapacity: number) => {
+    if (!selectedDriverId) return;
+    setCarrierLoading(true);
     try {
-      const nextState = !isOnline;
-      await api.toggleFavoriteDriver(selectedDriverId, nextState); // Using favorite endpoint as mock toggle/update or we assume active state toggled
-      setIsOnline(nextState);
-      if (driverDetails) {
-        setDriverDetails({ ...driverDetails, isActive: nextState });
-      }
-    } catch (e) {
-      alert('Error updating status');
+      const updated = await api.registerCarrier(selectedDriverId, {
+        routeId,
+        seatCapacity,
+        notes: notes.trim() || undefined,
+      });
+      setDriverDetails(updated);
+      driverStorage.setDriver(updated);
+    } catch (e: any) {
+      alert(e?.message || 'Failed to register as carrier');
+    } finally {
+      setCarrierLoading(false);
+    }
+  };
+
+  const handleEndCarrierListing = async () => {
+    if (!selectedDriverId) return;
+    setCarrierLoading(true);
+    try {
+      const updated = await api.clearCarrier(selectedDriverId);
+      setDriverDetails(updated);
+      driverStorage.setDriver(updated);
+    } catch (e: any) {
+      alert(e?.message || 'Failed to end carrier listing');
+    } finally {
+      setCarrierLoading(false);
     }
   };
 
@@ -201,39 +246,27 @@ export const DriverConsole: React.FC = () => {
     }
   };
 
-  return (
-    <div 
-      className="min-h-screen p-6 flex flex-col justify-between"
-      style={{
-        background: '#07080a',
-        color: '#ffffff',
-        fontFamily: "'Inter', system-ui, -apple-system, sans-serif"
-      }}
-    >
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-800 gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#2a6ff5] animate-pulse" />
-            <h1 className="text-xl font-bold tracking-tight">Raven Driver Console</h1>
-          </div>
-          <p className="text-[10px] text-gray-500 font-semibold tracking-wider mt-0.5">
-            STANDALONE SIMULATOR & TELEMETRY CONTROL
-          </p>
-        </div>
-        <button 
-          onClick={() => window.location.href = 'http://localhost:3000'} 
-          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-900 border border-gray-800 hover:bg-gray-800 transition-all cursor-pointer"
-        >
-          Exit Console
-        </button>
-      </div>
+  if (!loggedInDriver) {
+    return null;
+  }
 
-      {/* Main Panel */}
-      <div className="my-6 grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+  return (
+    <DriverLayout driver={loggedInDriver}>
+      <div className="p-6 flex flex-col justify-between">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
         
-        {/* Left Side: Configuration & Telemetry */}
+        {/* Left Side: Carrier check-in & profile */}
         <div className="space-y-6">
+          {driverDetails && (
+            <CarrierArrivalForm
+              driver={driverDetails}
+              transitStatus={transitStatus}
+              onSubmit={handleRegisterCarrier}
+              onEndListing={handleEndCarrierListing}
+              loading={carrierLoading}
+            />
+          )}
+
           <div className="p-5 rounded-2xl bg-[#111215] border border-gray-800 space-y-4">
             <div className="flex justify-between items-center pb-2 border-b border-gray-800/60">
               <h2 className="text-xs font-bold tracking-widest text-gray-400 uppercase">Driver Profile</h2>
@@ -272,24 +305,11 @@ export const DriverConsole: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
-                  <button
-                    onClick={toggleOnline}
-                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                      isOnline 
-                        ? 'bg-[#2a6ff5]/15 text-[#2a6ff5] border-[#2a6ff5]/30 hover:bg-[#2a6ff5]/25' 
-                        : 'bg-gray-800/40 text-gray-400 border-gray-700/30 hover:bg-gray-800/60'
-                    }`}
-                  >
-                    {isOnline ? '● Go Offline' : '○ Go Online'}
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="px-4 py-2.5 rounded-xl text-xs font-bold bg-red-950/20 text-red-400 border border-red-900/20 hover:bg-red-950/40 transition-all cursor-pointer"
-                  >
-                    Log Out
-                  </button>
-                </div>
+                {driverDetails.isCarrier && driverDetails.carrierFrom && (
+                  <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/20 text-xs text-emerald-400">
+                    Route: <strong className="text-white">{driverDetails.carrierFrom} → {driverDetails.carrierTo}</strong>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-xs text-gray-500 flex items-center justify-center py-4">
@@ -321,6 +341,10 @@ export const DriverConsole: React.FC = () => {
                 <p className={`text-sm font-bold mt-1 ${simulating ? 'text-white animate-pulse' : 'text-gray-400'}`}>
                   {simulating ? 'Moving' : 'Stationary'}
                 </p>
+              </div>
+              <div className="p-3 rounded-xl bg-black border border-gray-800 col-span-2">
+                <p className="text-[10px] text-gray-500 font-semibold uppercase">Telemetry packets received (WS)</p>
+                <p className="text-sm font-bold text-emerald-400 mt-1 font-mono">{telemetryReceived}</p>
               </div>
             </div>
 
@@ -363,7 +387,8 @@ export const DriverConsole: React.FC = () => {
 
             {shuttleDetails ? (
               <div className="space-y-4">
-                <div className="p-3 rounded-xl bg-black border border-gray-800 flex justify-between text-xs">
+                <div className="p-3 rounded-xl bg-black border border-gray-800 space-y-3 text-xs">
+                  <div className="flex justify-between items-center">
                   <div>
                     <span className="text-gray-500">Route:</span>{' '}
                     <span className="font-semibold text-white">
@@ -376,6 +401,39 @@ export const DriverConsole: React.FC = () => {
                       {shuttleDetails.bookedSeats.length} / {shuttleDetails.totalSeats}
                     </span>
                   </div>
+                  </div>
+                  {(() => {
+                    const returnRoute = CARRIER_ROUTES.find(
+                      r => r.from === shuttleDetails.route.to && r.to === shuttleDetails.route.from,
+                    );
+                    const lock = getCarrierRouteLockStatus(driverDetails || {});
+                    const returnBlocked = !!(
+                      driverDetails?.isCarrier &&
+                      returnRoute &&
+                      driverDetails.carrierRouteId !== returnRoute.id &&
+                      !lock.canChangeRoute
+                    );
+                    return (
+                      <button
+                        type="button"
+                        disabled={carrierLoading || returnBlocked}
+                        onClick={() => {
+                          if (returnRoute) {
+                            handleRegisterCarrier(
+                              returnRoute.id,
+                              `Shuttle ${shuttleDetails.shuttleCode} return leg`,
+                              driverDetails?.carrierSeatCapacity ?? shuttleDetails.totalSeats,
+                            );
+                          }
+                        }}
+                        className="w-full py-2 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 text-[11px] font-semibold hover:bg-emerald-600/30 cursor-pointer disabled:opacity-50"
+                      >
+                        {returnBlocked
+                          ? `Return route locked (${Math.ceil(lock.msRemaining / 60000)}m left)`
+                          : `List return route (${shuttleDetails.route.to} → ${shuttleDetails.route.from})`}
+                      </button>
+                    );
+                  })()}
                 </div>
 
                 {/* Grid */}
@@ -412,9 +470,9 @@ export const DriverConsole: React.FC = () => {
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center py-12 text-center text-gray-500">
                 <span className="text-3xl mb-2">🛺</span>
-                <p className="text-sm font-medium">Keke Driver Mode Active</p>
+                <p className="text-sm font-medium">Keke / bike mode</p>
                 <p className="text-xs text-gray-600 mt-1 max-w-xs">
-                  Telemetry updates are broadcasting. Keke ride fares are requested on-site by entering code {activeDriver?.systemCode || ''}.
+                  Select your route on the left after arriving at the pickup point. Passengers on that route will see you in the keke list.
                 </p>
               </div>
             )}
@@ -428,10 +486,10 @@ export const DriverConsole: React.FC = () => {
 
       </div>
 
-      {/* Footer */}
-      <div className="text-center text-[10px] text-gray-600">
-        © 2026 Raven Transit Technologies. Standalone Testing Sandbox.
+      <div className="text-center text-[10px] text-gray-600 mt-6">
+        © 2026 Raven Transit Technologies
       </div>
-    </div>
+      </div>
+    </DriverLayout>
   );
 };

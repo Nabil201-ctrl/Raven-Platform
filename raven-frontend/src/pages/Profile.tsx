@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import {
-  WalletIcon, PhoneIcon, StarIcon,
-  ArrowRightIcon, CheckIcon,
+  StarIcon,
+  ArrowRightIcon,
+  CheckIcon,
 } from '../icons';
 
 /* ── Small reusable row ──────────────────────────────── */
@@ -105,7 +106,7 @@ const LogOutIcon: React.FC<{ size?: number; style?: React.CSSProperties }> = ({ 
 /* ── Main component ──────────────────────────────────── */
 export const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const { user, balance, callMinutes, theme, toggleTheme, logout } = useAppContext();
+  const { user, theme, toggleTheme, logout } = useAppContext();
 
   const [notifications, setNotifications] = useState(true);
 
@@ -151,45 +152,6 @@ export const Profile: React.FC = () => {
             <span className="text-xs" style={{ color: 'var(--green-active)' }}>Active student</span>
           </div>
         </div>
-      </div>
-
-      {/* Stats strip */}
-      <div className="grid grid-cols-2 gap-2 mb-2">
-        {[
-          {
-            Icon: WalletIcon,
-            label: 'Wallet Balance',
-            value: `₦${balance.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`,
-            mono: true,
-            onClick: () => navigate('/wallet'),
-          },
-          {
-            Icon: PhoneIcon,
-            label: 'Call Minutes',
-            value: `${callMinutes} min`,
-            mono: true,
-            onClick: () => navigate('/calls'),
-          },
-        ].map(({ Icon, label, value, mono, onClick }) => (
-          <button
-            key={label}
-            onClick={onClick}
-            className="rounded-2xl p-4 text-left transition-all active:scale-[0.98]"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
-          >
-            <Icon size={16} style={{ color: 'var(--accent-blue-light)' } as React.CSSProperties} />
-            <p className="text-xs mt-2 mb-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
-            <p
-              className="text-base font-bold"
-              style={{
-                color: 'var(--text-primary)',
-                fontFamily: mono ? "'DM Mono', monospace" : undefined,
-              }}
-            >
-              {value}
-            </p>
-          </button>
-        ))}
       </div>
 
       {/* Appearance */}
@@ -278,9 +240,9 @@ export const Profile: React.FC = () => {
         <SettingRow
           label="Sign Out"
           danger
-          onClick={() => {
+          onClick={async () => {
             if (confirm('Sign out of Raven?')) {
-              logout();
+              await logout();
               navigate('/login');
             }
           }}

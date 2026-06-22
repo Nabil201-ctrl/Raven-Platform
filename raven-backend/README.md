@@ -184,3 +184,39 @@ npm run start:prod
 docker compose up -d --build
 ```
 This builds a highly optimized multi-stage container and exposes port `5000` with volume persistence.
+
+---
+
+## ⚠️ Production Readiness Notes (Current State)
+
+**This backend is architected with production patterns (validation, throttling, helmet, graceful shutdown, structured logging, Docker multi-stage, healthchecks) but contains demo-oriented shortcuts:**
+
+- **Persistence**: Uses a single `data/db.json` file via custom `DbService`. Suitable only for low-concurrency demos or single-instance deployments. **For real production use a proper database** (MongoDB scaffolding already present in `app.module.ts` but commented; Mongoose + schemas recommended).
+- **Authentication & Multi-tenancy**: Login/register is "sandbox permissive" (plain-text password storage, global "currentUser" context, any password accepted for known emails). There is **no per-request authenticated user**. All stateful operations act on the last-logged-in user. Real production requires:
+  - Bcrypt password hashing + JWT (or Passport + sessions)
+  - Request-scoped `userId` via guards + decorators (`@CurrentUser()`)
+  - Proper multi-user isolation for wallets, bookings, locks, etc.
+- **Seat Locking & Concurrency**: In-memory locks + JSON writes. Race conditions possible under load. Move locks to Redis or DB transactions + optimistic locking for production.
+- **Integrations**: Monnify and Africa's Talking are used in sandbox mode with heavy try/catch fallbacks. Add webhook signature validation, idempotency, and live keys for prod payments.
+- **Admin/Driver Auth**: Simple shared secret header guards (`RAVEN_ADMIN_KEY`). Replace with role-based JWT claims.
+- **Data Seeding**: Heavy initial demo data on first run. Gate behind `NODE_ENV !== 'production'`.
+
+**Recommended next steps for true production:**
+1. Uncomment and configure MongoDB + Mongoose models.
+2. Implement proper user auth (JWT + bcrypt) and attach user context to requests.
+3. Replace `DbService` usage with repository pattern + Mongoose.
+4. Add real payment webhook verification + audit trail.
+5. Add integration / e2e tests + load testing for the seat lock WS flow.
+6. Set `ALLOWED_ORIGINS` strictly + lock down CORS and API keys.
+
+The HTTP + WS contracts, modular structure, and hardening middleware are already a solid foundation.
+
+---
+
+## Health & Observability
+
+- `GET /api/health` — basic liveness (used by Docker HEALTHCHECK)
+- Structured logs via custom interceptor + Nest Logger
+- Graceful DB flush + WS disconnect on SIGTERM / SIGINT
+
+Run `npm run test` or `npm run test:e2e` (expand coverage for prod confidence).

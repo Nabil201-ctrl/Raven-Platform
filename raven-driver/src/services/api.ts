@@ -2,7 +2,9 @@ import type {
   User, Shuttle, Booking, Transaction, Driver, Complaint, RideHistoryEntry
 } from '../types';
 
-const BASE_URL = 'http://localhost:5000/api';
+import { API_BASE } from '../config';
+
+const BASE_URL = API_BASE;
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const adminKey = localStorage.getItem('raven_admin_key') || '';
@@ -162,6 +164,33 @@ export const api = {
     await request<void>(`/drivers/${driverId}/favorite`, {
       method: 'POST',
       body: JSON.stringify({ isFavorite }),
+    });
+  },
+
+  async setDriverActive(driverId: string, isActive: boolean): Promise<Driver> {
+    return request<Driver>(`/drivers/${driverId}/active`, {
+      method: 'POST',
+      body: JSON.stringify({ isActive }),
+    });
+  },
+
+  async getTransitStatus(): Promise<import('../types/transit').TransitStatus> {
+    return request<import('../types/transit').TransitStatus>('/transit/status');
+  },
+
+  async registerCarrier(
+    driverId: string,
+    data: { routeId: string; seatCapacity: number; notes?: string },
+  ): Promise<Driver> {
+    return request<Driver>(`/drivers/${driverId}/carrier`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async clearCarrier(driverId: string): Promise<Driver> {
+    return request<Driver>(`/drivers/${driverId}/carrier`, {
+      method: 'DELETE',
     });
   },
 
