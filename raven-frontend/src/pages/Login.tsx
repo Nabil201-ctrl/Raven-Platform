@@ -77,16 +77,6 @@ export const Login: React.FC = () => {
         return;
       }
       setSignupStep(2);
-    } else if (signupStep === 2) {
-      if (!phoneNumber.trim()) {
-        setError('Please enter your phone number.');
-        return;
-      }
-      if (role !== 'guest' && !campusId.trim()) {
-        setError(role === 'student' ? 'Please enter your Matric Number.' : 'Please enter your Campus ID.');
-        return;
-      }
-      setSignupStep(3);
     }
   };
 
@@ -94,6 +84,18 @@ export const Login: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Validate Profile/Step 2 Inputs
+    if (!phoneNumber.trim()) {
+      setError('Please enter your phone number.');
+      setLoading(false);
+      return;
+    }
+    if (role !== 'guest' && !campusId.trim()) {
+      setError(role === 'student' ? 'Please enter your Matric Number.' : 'Please enter your Campus ID.');
+      setLoading(false);
+      return;
+    }
 
     try {
       if (isLogin) {
@@ -105,7 +107,7 @@ export const Login: React.FC = () => {
           name, 
           email, 
           password, 
-          selectedAvatarId, 
+          'avatar_blue', 
           phoneNumber, 
           role, 
           campusId, 
@@ -120,8 +122,6 @@ export const Login: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const currentAvatar = AVATAR_OPTIONS.find(a => a.id === selectedAvatarId) || AVATAR_OPTIONS[0];
 
   return (
     <div
@@ -201,19 +201,18 @@ export const Login: React.FC = () => {
             <div className="mb-6 flex flex-col space-y-2 relative z-10">
               <div className="flex justify-between items-center px-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                  Step {signupStep} of 3
+                  Step {signupStep} of 2
                 </span>
                 <span className="text-[10px] font-semibold text-gray-400">
                   {signupStep === 1 && 'Basic Account'}
                   {signupStep === 2 && 'Campus Identity'}
-                  {signupStep === 3 && 'Virtual Card Setup'}
                 </span>
               </div>
               <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden flex">
                 <div 
                   className="h-full transition-all duration-300"
                   style={{
-                    width: `${(signupStep / 3) * 100}%`,
+                    width: `${(signupStep / 2) * 100}%`,
                     background: '#2563eb',
                   }}
                 />
@@ -441,7 +440,7 @@ export const Login: React.FC = () => {
 
               {/* STEP 2: Campus Identity & Preferences */}
               {signupStep === 2 && (
-                <form onSubmit={handleNextStep} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   
                   {/* Role Selection Tabs */}
                   <div className="space-y-1.5">
@@ -540,7 +539,7 @@ export const Login: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setSignupStep(1)}
-                      className="flex-1 py-3 rounded-xl text-xs font-bold transition-all border text-gray-400 hover:text-white flex items-center justify-center space-x-1"
+                      className="flex-1 py-3 rounded-xl text-xs font-bold transition-all border text-gray-400 hover:text-white flex items-center justify-center space-x-1 cursor-pointer"
                       style={{
                         background: 'rgba(255,255,255,0.02)',
                         borderColor: 'rgba(255,255,255,0.06)'
@@ -551,135 +550,20 @@ export const Login: React.FC = () => {
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 py-3 rounded-xl text-xs font-bold text-white transition-all flex items-center justify-center space-x-1"
-                      style={{
-                        background: '#2563eb',
-                      }}
-                    >
-                      <span>Preferences</span>
-                      <ChevronRight size={14} />
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {/* STEP 3: Monnify Wallet setup & Completion */}
-              {signupStep === 3 && (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  
-                  {/* Virtual Card Rendering */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                      Your virtual monnify account
-                    </label>
-                    <div 
-                      className="p-5 rounded-xl relative flex flex-col justify-between h-[155px] border"
-                      style={{
-                        background: '#0d1117',
-                        borderColor: 'rgba(255, 255, 255, 0.08)',
-                      }}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex flex-col">
-                          <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">
-                            RAVEN PAY
-                          </span>
-                          <span className="text-[7px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">
-                            Virtual Debit Card
-                          </span>
-                        </div>
-                        <div 
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
-                          style={{ background: currentAvatar.color }}
-                        >
-                          {name ? name.substring(0, 2).toUpperCase() : 'RV'}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col space-y-1">
-                        <span className="text-lg font-bold tracking-widest text-white/90 font-mono">
-                          8852 4910 •••• ••••
-                        </span>
-                        <div className="flex justify-between items-center pr-2">
-                          <div className="flex flex-col">
-                            <span className="text-[7px] text-gray-500 font-bold uppercase">Account Name</span>
-                            <span className="text-[10px] font-bold text-white truncate max-w-[150px]">
-                              {name || 'Transit Commuter'}
-                            </span>
-                          </div>
-                          <div className="flex flex-col items-end">
-                            <span className="text-[7px] text-gray-500 font-bold uppercase">Balance</span>
-                            <span className="text-[10px] font-semibold text-gray-300">
-                              ₦15,000.00
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-[10px] leading-relaxed text-gray-500 px-1 pt-1">
-                      ℹ️ Your registration triggers a Monnify virtual reserved account. We've pre-funded your balance with a <strong className="text-white">₦15,000 NGN welcome credit</strong> and <strong className="text-white">10 free call minutes</strong>.
-                    </p>
-                  </div>
-
-                  {/* Avatar Selector */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                      Select Avatar Theme
-                    </label>
-                    <div className="flex justify-between items-center p-2 rounded-xl bg-black/30 border border-white/5">
-                      {AVATAR_OPTIONS.map(avatar => (
-                        <button
-                          key={avatar.id}
-                          type="button"
-                          onClick={() => setSelectedAvatarId(avatar.id)}
-                          className="w-10 h-10 rounded-full flex items-center justify-center transition-all relative cursor-pointer"
-                          style={{ 
-                            background: avatar.color,
-                            transform: selectedAvatarId === avatar.id ? 'scale(1.1)' : 'scale(1)',
-                            border: selectedAvatarId === avatar.id ? '2px solid #ffffff' : '1.5px solid rgba(255,255,255,0.15)',
-                          }}
-                          title={avatar.label}
-                        >
-                          <span className="text-white text-xs font-bold">
-                            {name ? name.charAt(0).toUpperCase() : 'U'}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Submit and Back Buttons */}
-                  <div className="flex flex-col space-y-3 pt-2">
-                    <button
-                      type="submit"
                       disabled={loading}
-                      className="w-full py-3.5 rounded-xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center cursor-pointer"
+                      className="flex-1 py-3 rounded-xl text-xs font-bold text-white transition-all flex items-center justify-center space-x-1 cursor-pointer"
                       style={{
                         background: '#059669',
-                        color: '#ffffff',
                       }}
                     >
                       {loading ? (
-                        <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                        <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
                       ) : (
                         <>
-                          <CreditCard size={16} className="mr-2" />
-                          <span>Activate Wallet & Launch Account</span>
+                          <span>Launch Account</span>
+                          <ChevronRight size={14} />
                         </>
                       )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setSignupStep(2)}
-                      className="w-full py-3 rounded-xl text-xs font-bold transition-all border text-gray-400 hover:text-white flex items-center justify-center space-x-1"
-                      style={{
-                        background: 'rgba(255,255,255,0.02)',
-                        borderColor: 'rgba(255,255,255,0.06)'
-                      }}
-                    >
-                      <ChevronLeft size={14} />
-                      <span>Back to preferences</span>
                     </button>
                   </div>
                 </form>
