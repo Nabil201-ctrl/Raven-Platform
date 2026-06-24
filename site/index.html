@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raven — Smart Real-Time Campus Transit Booking</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Raven is a modern campus transit system. Reserve seats in real-time, pay cashless, and track active shuttles on your university campus.">
+    <meta name="keywords" content="Campus transit, shuttle booking, student wallet, real-time seat booking, university shuttle">
+    <meta name="author" content="Raven Transit Platform">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Raven — Smart Real-Time Campus Transit Booking">
+    <meta property="og:description" content="A seamless transit booking ecosystem. Tap to reserve seats, pay cashless, and enjoy private, secure rides across campus.">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header id="main-header">
+        <div class="container nav-container">
+            <a href="#" class="logo" id="nav-logo">
+                <img src="assets/raven_logo.png" alt="Raven Logo">
+                <span class="logo-text">Raven</span>
+            </a>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="#overview" class="nav-link" id="link-overview">Overview</a></li>
+                    <li><a href="#features" class="nav-link" id="link-features">Our Features</a></li>
+                    <li><a href="#how-it-works" class="nav-link" id="link-timeline">How It Works</a></li>
+                    <li><a href="#playground" class="nav-link" id="link-playground">Interactive Demo</a></li>
+                    <li><a href="#faq" class="nav-link" id="link-faq">Frequently Asked Questions</a></li>
+                </ul>
+            </nav>
+            <a href="#playground" class="nav-cta" id="nav-cta-launch">Try Simulator</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero" id="overview">
+            <div class="container hero-grid">
+                <div class="hero-text">
+                    <h1 class="hero-title">
+                        Campus Commutes, <br>
+                        <span class="gradient">Made Simple.</span>
+                    </h1>
+                    <p class="hero-desc">
+                        Say goodbye to long queues and crowded stops. Raven connects students and campus drivers in real-time. Reserve your seat instantly, pay securely without cash, and pre-book returning shuttles before they even arrive.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="#playground" class="btn btn-primary" id="hero-btn-demo">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Try the Simulator
+                        </a>
+                        <a href="#how-it-works" class="btn btn-secondary" id="hero-btn-timeline">
+                            <i class="fa-solid fa-circle-question"></i> Learn How It Works
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="hero-graphic">
+                    <div class="hero-image-container">
+                        <img src="assets/raven_logo.png" alt="Raven App Preview" class="hero-preview-logo">
+                        
+                        <!-- Floating badges -->
+                        <div class="floating-badge fb-1" id="fb-shuttles">
+                            <div class="fb-icon"><i class="fa-solid fa-van-shuttle"></i></div>
+                            <div class="fb-text">
+                                <h5>Active Shuttles</h5>
+                                <p>Live tracking online</p>
+                            </div>
+                        </div>
+                        <div class="floating-badge fb-2" id="fb-payments">
+                            <div class="fb-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                            <div class="fb-text">
+                                <h5>100% Cashless</h5>
+                                <p>Secure digital wallet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Grid Section -->
+        <section class="features" id="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2>One System. <span>Two Easy Modules.</span></h2>
+                    <p>Raven links passengers and drivers together into a single, seamless transit coordination network.</p>
+                </div>
+                
+                <div class="features-grid">
+                    <!-- Passenger App -->
+                    <article class="feature-card" id="feat-passenger">
+                        <div class="feature-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                        <h3>Passenger App</h3>
+                        <p>A simple, dark-first mobile app for students and staff. Open it up, view active routes, and secure your ride in seconds.</p>
+                        <ul class="feature-list">
+                            <li><i class="fa-solid fa-circle-check"></i> <strong>Tap-to-Reserve:</strong> Pick your exact seat visually.</li>
+                            <li><i class="fa-solid fa-circle-check"></i> <strong>Cashless Wallet:</strong> Quick deposits and secure ticket checks.</li>
+                            <li><i class="fa-solid fa-circle-check"></i> <strong>Private Calling:</strong> Call your driver securely, phone numbers hidden.</li>
+                            <li><i class="fa-solid fa-circle-check"></i> <strong>Smart Alerts:</strong> Book returning trips when outbound shuttles are full.</li>
+                        </ul>
+                    </article>
+                    
+                    <!-- Driver Console -->
+                    <article class="feature-card" id="feat-driver">
+                        <div class="feature-icon"><i class="fa-solid fa-id-card-clip"></i></div>
+                        <h3>Driver Dashboard</h3>
+                        <p>An easy-to-use, high-contrast console mounted on driver dashboards to optimize runs and manage passenger queues.</p>
+                        <ul class="feature-list">
+                            <li><i class="fa-solid fa-circle-check"></i> <strong>Secure Logins:</strong> Direct verification using safe code checks.</li>
+                            <li><i class="fa-solid fa-circle-check"></i> <strong>Live Passenger Boarding:</strong> Know exactly who has booked.</li>
+                            <li><i class="fa-solid fa-circle-check"></i> <strong>Safe Communications:</strong> Speak to waiting riders with masked calling.</li>
+                            <li><i class="fa-solid fa-circle-check"></i> <strong>Ride Feedbacks:</strong> Receive ratings upon completing successful runs.</li>
+                        </ul>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Timeline / How it Works Section -->
+        <section class="how-it-works" id="how-it-works">
+            <div class="container">
+                <div class="section-header">
+                    <h2>How Simple Is It? <span>See For Yourself.</span></h2>
+                    <p>Raven takes the friction out of transit. Three easy steps to get you moving across campus in record time.</p>
+                </div>
+                
+                <div class="timeline-grid">
+                    <!-- Step 1 -->
+                    <div class="timeline-step" id="step-1">
+                        <div class="step-number">1</div>
+                        <div class="step-icon"><i class="fa-solid fa-hand-pointer"></i></div>
+                        <h4>1. Select & Lock Seat</h4>
+                        <p>Pick an active shuttle and tap an open seat on the visual map. The system holds the seat exclusively for you for 2 minutes so you can finish checkout without stress.</p>
+                    </div>
+                    
+                    <!-- Step 2 -->
+                    <div class="timeline-step" id="step-2">
+                        <div class="step-number">2</div>
+                        <div class="step-icon"><i class="fa-solid fa-wallet"></i></div>
+                        <h4>2. Cashless Checkout</h4>
+                        <p>Pay instantly using your secure digital Raven wallet. Fares are deducted automatically, and your electronic ticket is generated with a secure verification code.</p>
+                    </div>
+                    
+                    <!-- Step 3 -->
+                    <div class="timeline-step" id="step-3">
+                        <div class="step-number">3</div>
+                        <div class="step-icon"><i class="fa-solid fa-van-shuttle"></i></div>
+                        <h4>3. Board & Enjoy the Ride</h4>
+                        <p>Show your digital ticket to the driver, hop on, and ride! Call drivers privately if you need coordinates, or pre-book returning legs when campus stops get busy.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Playground -->
+        <section class="playground" id="playground">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Test Drive the <span>Booking Simulator</span></h2>
+                    <p>Experience the magic of live seat reservations, digital wallet funding, and returning-shuttle alerts. Use the panels below to try a real-life booking! </p>
+                </div>
+                
+                <div class="play-grid">
+                    <!-- Shuttle Seat Selector Widget -->
+                    <div class="play-widget" id="shuttle-booking-widget">
+                        <div class="widget-header">
+                            <div class="widget-title">
+                                <span class="widget-dot"></span>
+                                <h4>Shuttle sh_KQ07</h4>
+                            </div>
+                            <span class="widget-route">Main Gate ↔ Senate Building</span>
+                        </div>
+                        
+                        <div class="seat-map-container">
+                            <div class="seat-grid-label">Front of Shuttle</div>
+                            <div class="seat-grid" id="interactive-seat-grid">
+                                <!-- Generated via JS -->
+                            </div>
+                        </div>
+                        
+                        <div class="simulator-controls">
+                            <button class="btn btn-secondary" style="width: 100%;" id="btn-simulate-full">
+                                <i class="fa-solid fa-users"></i> Fill Shuttle (Trigger Return Alert)
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Passenger Wallet & Log Panel -->
+                    <div class="passenger-panel">
+                        <!-- Wallet Card -->
+                        <div class="wallet-card" id="passenger-wallet">
+                            <div class="wallet-details">
+                                <h5>Your Digital Wallet</h5>
+                                <div class="wallet-balance" id="wallet-balance-val">₦1,500</div>
+                            </div>
+                            <div class="wallet-actions">
+                                <button class="btn-fund" id="btn-fund-wallet">+ Fund ₦1,000</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Booking Action Panel -->
+                        <div class="booking-actions" id="booking-controls">
+                            <div class="booking-status-text">
+                                <span id="booking-status-txt">Selected Seat: <span class="booking-status-value idle">None</span></span>
+                                <span class="countdown-timer hidden" id="countdown-timer-container">
+                                    <i class="fa-regular fa-clock"></i> Hold expires in: <span id="countdown-timer-val">2:00</span>
+                                </span>
+                            </div>
+                            <button class="btn btn-primary" style="width: 100%;" id="btn-confirm-booking">
+                                <i class="fa-solid fa-ticket"></i> Purchase Ticket for ₦500
+                            </button>
+                        </div>
+
+                        <!-- Reverse Trip Slide-in Alert (Hidden by default) -->
+                        <div class="reverse-alert-card" id="reverse-alert">
+                            <div class="reverse-alert-header">
+                                <span class="reverse-alert-tag">Returning Shuttle</span>
+                                <span class="reverse-alert-timer"><i class="fa-solid fa-truck-ramp-box"></i> Arriving in: <span id="reverse-timer-val">8:00</span></span>
+                            </div>
+                            <h5 class="reverse-alert-title">Returning Shuttle Dispatched!</h5>
+                            <p class="reverse-alert-desc">
+                                Shuttle sh_KQ07 is fully loaded at Senate Building and returning to the Main Gate. Only 4 seats are left on the inbound trip. Pre-book your ticket now to secure a ride!
+                            </p>
+                            <button class="btn-prebook" id="btn-prebook-reverse">
+                                Pre-Book Returning Seat for ₦500
+                            </button>
+                        </div>
+                        
+                        <!-- Socket & Log Terminal -->
+                        <div class="terminal-log" id="system-terminal">
+                            <div class="terminal-header">
+                                <div class="terminal-bullets">
+                                    <span class="terminal-bullet red"></span>
+                                    <span class="terminal-bullet yellow"></span>
+                                    <span class="terminal-bullet green"></span>
+                                </div>
+                                <span class="terminal-title"><i class="fa-solid fa-satellite-dish"></i> Live Shuttle Activity Feed</span>
+                            </div>
+                            <div class="terminal-body" id="terminal-log-body">
+                                <!-- Logs will append here dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive FAQ Accordion -->
+        <section class="faq" id="faq">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Frequently <span>Asked Questions</span></h2>
+                    <p>Have questions about how Raven works on campus? Here are all the answers explained in plain, simple terms.</p>
+                </div>
+                
+                <div class="faq-container">
+                    <!-- FAQ 1 -->
+                    <div class="faq-item" id="faq-1">
+                        <button class="faq-trigger">
+                            <span>How does the 2-minute seat reservation hold work?</span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <div class="faq-content">
+                            <div class="faq-inner">
+                                When you select an open seat, Raven reserves it exclusively for you for 2 minutes. This stops other passengers from booking the same seat while you check out. If you complete your ticket purchase within 2 minutes, it is yours! If the timer expires, the seat is released back to the map so others can book it.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- FAQ 2 -->
+                    <div class="faq-item" id="faq-2">
+                        <button class="faq-trigger">
+                            <span>How do I fund my Raven digital wallet?</span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <div class="faq-content">
+                            <div class="faq-inner">
+                                Funding is 100% cashless and secure. You can top up your wallet inside the app using card payments, bank transfers, or mobile money through our secure payment gateways. In our simulator, you can simply tap the "+ Fund ₦1,000" button to instantly simulate adding funds to your balance!
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- FAQ 3 -->
+                    <div class="faq-item" id="faq-3">
+                        <button class="faq-trigger">
+                            <span>Is my private phone number visible when calling a driver?</span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <div class="faq-content">
+                            <div class="faq-inner">
+                                No! Your privacy and safety are extremely important. Raven features private call-masking. When you click to call a driver (or when a driver calls you), our secure telecom gateway bridges the call, displaying a random system number to both parties. Neither you nor the driver will ever see each other's private numbers.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- FAQ 4 -->
+                    <div class="faq-item" id="faq-4">
+                        <button class="faq-trigger">
+                            <span>What is a returning reverse-trip alert?</span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <div class="faq-content">
+                            <div class="faq-inner">
+                                When a shuttle gets fully booked on its outbound route (e.g., leaving the Main Gate for Senate Building), our smart transit scheduler automatically schedules its return leg. It immediately broadcasts an alert to riders waiting at the opposite terminal, allowing you to pre-book your return ticket before the vehicle even arrives!
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- FAQ 5 -->
+                    <div class="faq-item" id="faq-5">
+                        <button class="faq-trigger">
+                            <span>How can my university campus start using Raven?</span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <div class="faq-content">
+                            <div class="faq-inner">
+                                Raven is built as a flexible transit software suite that can be deployed on any closed campus, corporate center, or residential community. It features easy passenger apps, driver tablet dashboards, and a complete administrative control panel. Contact our transit team to integrate Raven on your campus!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-grid" style="grid-template-columns: 1.5fr repeat(2, 1fr); gap: 4rem; margin-bottom: 2rem;">
+            <div class="footer-brand" id="footer-brand-section">
+                <a href="#" class="logo" style="margin-bottom: 1.25rem;" id="footer-logo">
+                    <img src="assets/raven_logo.png" alt="Raven Logo">
+                    <span class="logo-text">Raven</span>
+                </a>
+                <p>A smart, real-time campus transit coordination ecosystem linking passenger interfaces and driver dashboards in a unified monorepo.</p>
+            </div>
+            
+            <div class="footer-col" id="footer-col-1">
+                <h5>Monorepo Packages</h5>
+                <ul class="footer-links">
+                    <li><a href="#features">Passenger App</a></li>
+                    <li><a href="#features">Driver Console</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-col" id="footer-col-2">
+                <h5>Showcase Demo</h5>
+                <ul class="footer-links">
+                    <li><a href="#playground">Interactive Simulator</a></li>
+                    <li><a href="#how-it-works">Passenger Commute Timeline</a></li>
+                    <li><a href="#faq">Frequently Asked Questions</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="container footer-bottom" style="border-top: 1px solid rgba(37, 99, 235, 0.1); padding-top: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <p>&copy; 2026 Raven Transit Monorepo. Built for smart university campus mobility.</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Local Developer Showcase Mode</p>
+        </div>
+    </footer>
+
+    <!-- Custom Popup Modal -->
+    <div class="modal-overlay" id="ticket-modal">
+        <div class="modal-card">
+            <button class="modal-close" id="modal-close-btn" aria-label="Close modal"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-icon"><i class="fa-solid fa-ticket"></i></div>
+            <h3 class="modal-title" id="modal-title-text">Booking Confirmed!</h3>
+            <p class="modal-message" id="modal-message-text">Your digital ticket is ready.</p>
+            
+            <div class="ticket-view" id="ticket-view-container">
+                <div class="ticket-header">
+                    <span>RAVEN BOARDING PASS</span>
+                    <span class="ticket-route-badge" id="ticket-route-name">ROUTE A</span>
+                </div>
+                <div class="ticket-body">
+                    <div class="ticket-info">
+                        <span class="ticket-info-label">TICKET CODE</span>
+                        <span class="ticket-info-val" id="ticket-code-val">TKT-KQ07-1005</span>
+                    </div>
+                    <div class="ticket-info" style="text-align: right;">
+                        <span class="ticket-info-label">ASSIGNED SEAT</span>
+                        <span class="ticket-info-val" id="ticket-seat-val" style="color: var(--accent);">Seat 5</span>
+                    </div>
+                </div>
+                <div class="ticket-footer">
+                    <p>Present barcode to driver upon boarding</p>
+                    <div class="ticket-barcode">
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;" id="modal-ok-btn">Awesome, Let's Ride!</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
